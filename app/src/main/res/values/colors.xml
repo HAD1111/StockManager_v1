@@ -1,0 +1,32 @@
+<!-- res/values/colors.xml -->
+<resources>
+
+    <!-- ===== PRIMARY BRAND COLOR — change this to retheme the whole app ===== -->
+    <color name="primary">#1A56DB</color>
+    <color name="primary_dark">#1042A8</color>
+    <color name="primary_light">#EBF5FF</color>
+
+    <!-- ===== ACCENT ===== -->
+    <color name="accent">#16BDCA</color>
+    <color name="accent_light">#E0F7F8</color>
+
+    <!-- ===== SEMANTIC ===== -->
+    <color name="success">#057A55</color>
+    <color name="success_bg">#DEF7EC</color>
+    <color name="warning">#C27803</color>
+    <color name="warning_bg">#FDF6B2</color>
+    <color name="danger">#C81E1E</color>
+    <color name="danger_bg">#FDE8E8</color>
+
+    <!-- ===== NEUTRALS ===== -->
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="background">#F9FAFB</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="border">#0F172A</color>
+
+    <!-- ===== SIDEBAR ===== -->
+    <color name="sidebar_bg">#0F172A</color>
+    <color name="sidebar_text">#94A3B8</color>
+
+</resources>

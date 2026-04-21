@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/dashboardFragment">
+
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.example.stockmaneger.ui.dashboard.DashboardFragment"
+        android:label="Dashboard" />
+
+    <fragment
+        android:id="@+id/salesFragment"
+        android:name="com.example.stockmaneger.ui.sales.SalesFragment"
+        android:label="My Sales" />
+
+    <fragment
+        android:id="@+id/customersFragment"
+        android:name="com.example.stockmaneger.ui.customers.CustomersFragment"
+        android:label="Customers" />
+
+    <fragment
+        android:id="@+id/stockFragment"
+        android:name="com.example.stockmaneger.ui.stock.StockFragment"
+        android:label="Stock" />
+
+    <fragment
+        android:id="@+id/accountFragment"
+        android:name="com.example.stockmaneger.ui.account.AccountFragment"
+        android:label="Account" />
+
+    <fragment
+        android:id="@+id/reportsFragment"
+        android:name="com.example.stockmaneger.ui.reports.ReportsFragment"
+        android:label="Reports" />
+
+</navigation>
