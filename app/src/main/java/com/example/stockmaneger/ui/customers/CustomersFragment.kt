@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -121,11 +122,25 @@ class CustomersFragment : Fragment() {
             .setTitle("Delete Customer")
             .setMessage("Delete ${customer.name}? This cannot be undone.")
             .setPositiveButton("Delete") { _, _ ->
-                customerDao.delete(customer.id)
+                val result = customerDao.delete(customer.id)
+                if(result==0)
+                    Toast.makeText(
+                        this.context,
+                        "Customer has sales. Can't delete!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                else{
+                    Toast.makeText(
+                        this.context,
+                        "Customer deleted!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
                 loadCustomers()
             }
             .setNegativeButton("Cancel", null)
             .show()
+
     }
 
     // Builds a simple name + phone form programmatically

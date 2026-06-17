@@ -10,7 +10,9 @@ class DatabaseHelper(context: Context) :
 
     companion object {
         const val DATABASE_NAME = "stockmaneger.db"
-        const val DATABASE_VERSION = 1
+        const val DATABASE_VERSION = 3
+
+
 
         // ── Customers ──────────────────────────────
         const val TABLE_CUSTOMERS   = "customers"
@@ -52,6 +54,7 @@ class DatabaseHelper(context: Context) :
         const val TABLE_ACCOUNT     = "account"
         const val COL_ACC_MONEY     = "totalMoney"
         const val COL_ACC_PROFIT    = "totalProfit"
+        const val COL_ACC_BUSINESS_NAME = "businessName"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -104,12 +107,13 @@ class DatabaseHelper(context: Context) :
         db.execSQL("""
             CREATE TABLE $TABLE_ACCOUNT (
                 $COL_ACC_MONEY  REAL DEFAULT 0.0,
-                $COL_ACC_PROFIT REAL DEFAULT 0.0
+                $COL_ACC_PROFIT REAL DEFAULT 0.0,
+                $COL_ACC_BUSINESS_NAME TEXT
             )
         """)
 
         // Insert that one row
-        db.execSQL("INSERT INTO $TABLE_ACCOUNT VALUES (0.0, 0.0)")
+        db.execSQL("INSERT INTO $TABLE_ACCOUNT VALUES (0.0, 0.0,'')")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {

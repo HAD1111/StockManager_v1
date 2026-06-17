@@ -3,6 +3,8 @@ package com.example.stockmaneger.data.dao
 
 import android.content.ContentValues
 import android.content.Context
+import android.widget.Toast
+import com.example.stockmaneger.MainActivity
 import com.example.stockmaneger.data.DatabaseHelper
 import com.example.stockmaneger.data.models.Customer
 
@@ -32,6 +34,10 @@ class CustomerDao(context: Context) {
     }
 
     fun delete(id: Int): Int {
+        val sales = db.rawQuery("SELECT 1 FROM ${ DatabaseHelper.TABLE_SALES} WHERE ${ DatabaseHelper.COL_SALE_CUST_ID}=?",arrayOf(id.toString()))
+        if(sales.moveToFirst()) {
+            return 0
+        }
         return db.delete(
             DatabaseHelper.TABLE_CUSTOMERS,
             "${DatabaseHelper.COL_CUST_ID} = ?",
@@ -115,4 +121,19 @@ class CustomerDao(context: Context) {
         cursor.close()
         return list
     }
+
+    fun getTotalCustomer(): Int {
+        val cursor = db.rawQuery(
+            "SELECT COUNT(${DatabaseHelper.COL_CUST_ID}) FROM (${DatabaseHelper.TABLE_CUSTOMERS})",
+            null
+        )
+        val result = if (cursor.moveToFirst()){
+            cursor.getInt(0)
+        }
+        else
+            0
+        cursor.close()
+        return result
+    }
+
 }

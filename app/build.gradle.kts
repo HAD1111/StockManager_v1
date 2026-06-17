@@ -46,9 +46,14 @@ dependencies {
 
     // PDF generation (Step 7)
     implementation("com.itextpdf:itextg:5.5.10")
+    // PDF generation
+    implementation("com.itextpdf:itextg:5.5.10")
+
 
     // Excel generation (Step 7)
     implementation("org.apache.poi:poi:5.2.3")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
+
 
     implementation ("androidx.compose.ui:ui:1.5.1")
     implementation ("androidx.compose.material3:material3:1.1.2")

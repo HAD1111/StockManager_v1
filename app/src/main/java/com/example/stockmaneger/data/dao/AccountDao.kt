@@ -51,4 +51,18 @@ class AccountDao(context: Context) {
             SET ${DatabaseHelper.COL_ACC_PROFIT} = ${DatabaseHelper.COL_ACC_PROFIT} + $amount
         """)
     }
+
+    fun getBusinessName(): String{
+        val cursor = db.rawQuery("SELECT ${DatabaseHelper.COL_ACC_BUSINESS_NAME} FROM ${
+            DatabaseHelper.TABLE_ACCOUNT} LIMIT 1",null)
+        cursor.moveToFirst()
+        var result = cursor.getString(0)
+
+        if (result.isEmpty()) result="My Business"
+
+        cursor.close()
+        return result
+
+    }
+
 }

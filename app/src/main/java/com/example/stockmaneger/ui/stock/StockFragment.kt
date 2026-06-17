@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -131,26 +132,106 @@ class StockFragment : Fragment() {
             .show()
     }
 
+    private fun showEditWarningAndProceed(
+        product: Product,
+        name: String,
+        qty: Int,
+        base: Double,
+        sale: Double,
+        needed: Double,
+        available: Double
+    ) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("⚠️ Insufficient Balance")
+            .setMessage(
+                "Additional amount needed: $$needed\n" +
+                        "Available: $$available\n\n" +
+                        "This will result in a negative balance. Proceed anyway?"
+            )
+            .setPositiveButton("Proceed") { _, _ ->
+
+                val oldCost = product.quantity * product.basePrice
+                val newCost = qty * base
+
+                val difference = newCost - oldCost
+
+                accountDao.addMoney(-difference)
+
+                productDao.update(
+                    Product(
+                        product.id,
+                        name,
+                        qty,
+                        base,
+                        sale
+                    )
+                )
+
+                loadProducts()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
     private fun showEditDialog(product: Product) {
-        val layout  = buildFormLayout(product.name, product.quantity, product.basePrice, product.salePrice)
-        val etName  = layout.getChildAt(0) as EditText
-        val etQty   = layout.getChildAt(1) as EditText
-        val etBase  = layout.getChildAt(2) as EditText
-        val etSale  = layout.getChildAt(3) as EditText
+        val layout = buildFormLayout(
+            product.name,
+            product.quantity,
+            product.basePrice,
+            product.salePrice
+        )
+
+        val etName = layout.getChildAt(0) as EditText
+        val etQty  = layout.getChildAt(1) as EditText
+        val etBase = layout.getChildAt(2) as EditText
+        val etSale = layout.getChildAt(3) as EditText
 
         AlertDialog.Builder(requireContext())
             .setTitle("Edit Product")
             .setView(layout)
             .setPositiveButton("Update") { _, _ ->
+
                 val name = etName.text.toString().trim()
                 val qty  = etQty.text.toString().toIntOrNull() ?: 0
                 val base = etBase.text.toString().toDoubleOrNull() ?: 0.0
                 val sale = etSale.text.toString().toDoubleOrNull() ?: 0.0
 
-                if (name.isNotEmpty()) {
-                    productDao.update(Product(product.id, name, qty, base, sale))
-                    loadProducts()
+                if (name.isEmpty()) return@setPositiveButton
+
+                val oldCost = product.quantity * product.basePrice
+                val newCost = qty * base
+
+                val difference = newCost - oldCost
+
+                if (difference > 0) {
+                    val available = accountDao.getTotalMoney()
+
+                    if (available < difference) {
+                        showEditWarningAndProceed(
+                            product,
+                            name,
+                            qty,
+                            base,
+                            sale,
+                            difference,
+                            available
+                        )
+                        return@setPositiveButton
+                    }
                 }
+
+                accountDao.addMoney(-difference)
+
+                productDao.update(
+                    Product(
+                        product.id,
+                        name,
+                        qty,
+                        base,
+                        sale
+                    )
+                )
+
+                loadProducts()
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -161,7 +242,20 @@ class StockFragment : Fragment() {
             .setTitle("Delete Product")
             .setMessage("Delete ${product.name}? This cannot be undone.")
             .setPositiveButton("Delete") { _, _ ->
-                productDao.delete(product.id)
+                val result = productDao.delete(product.id)
+                if(result==0)
+                    Toast.makeText(
+                        this.context,
+                        "Product has sales related to it!. Set Quantity to 0 instead",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                else{
+                    Toast.makeText(
+                        this.context,
+                        "Product deleted!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
                 loadProducts()
             }
             .setNegativeButton("Cancel", null)

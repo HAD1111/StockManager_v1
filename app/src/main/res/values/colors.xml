@@ -28,5 +28,6 @@
     <!-- ===== SIDEBAR ===== -->
     <color name="sidebar_bg">#0F172A</color>
     <color name="sidebar_text">#94A3B8</color>
+    <color name="search_border">#0F172A</color>
 
 </resources>

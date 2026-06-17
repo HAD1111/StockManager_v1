@@ -1,5 +1,6 @@
 package com.example.stockmaneger.data.dao
 
+import android.R
 import android.content.ContentValues
 import android.content.Context
 import com.example.stockmaneger.data.DatabaseHelper
@@ -28,7 +29,7 @@ class SaleDao(context: Context) {
     fun delete(id: Int) {
 
         val query = db.rawQuery(
-            "SELECT ${DatabaseHelper.COL_SALE_QTY}, ${DatabaseHelper.COL_SALE_PROD_ID} " +
+            "SELECT ${DatabaseHelper.COL_SALE_QTY}, ${DatabaseHelper.COL_SALE_PROD_ID}, ${DatabaseHelper.COL_SALE_TOTAL},${DatabaseHelper.COL_SALE_PROFIT} " +
                     "FROM ${DatabaseHelper.TABLE_SALES} " +
                     "WHERE ${DatabaseHelper.COL_SALE_ID} = ?",
             arrayOf(id.toString())
@@ -38,6 +39,8 @@ class SaleDao(context: Context) {
 
             val qty = query.getInt(0)
             val productId = query.getInt(1)
+            val total = query.getDouble(2)
+            val profit = query.getDouble(3)
 
             db.execSQL(
                 "UPDATE ${DatabaseHelper.TABLE_PRODUCTS} " +
@@ -45,6 +48,15 @@ class SaleDao(context: Context) {
                         "WHERE ${DatabaseHelper.COL_PROD_ID} = ?",
                 arrayOf(qty, productId)
             )
+
+            db.execSQL(
+                "UPDATE ${DatabaseHelper.TABLE_ACCOUNT} "+
+                        "SET ${DatabaseHelper.COL_ACC_MONEY} = ${DatabaseHelper.COL_ACC_MONEY} - ? , "+
+                        "${DatabaseHelper.COL_ACC_PROFIT} = ${DatabaseHelper.COL_ACC_PROFIT} - ? "
+                        ,
+        arrayOf(total,profit)
+            )
+
         }
 
         query.close()
@@ -205,6 +217,21 @@ class SaleDao(context: Context) {
         return input.contains("cash")or input.contains("omt")or
                 input.contains("whish")or input.contains("crypto")
     }
+
+    fun getSalesCount(): Int {
+        val cursor = db.rawQuery(
+            "SELECT COUNT(${DatabaseHelper.COL_SALE_ID}) FROM ${DatabaseHelper.TABLE_SALES}",
+            null
+        )
+        val result = if (cursor.moveToFirst())
+            cursor.getInt(0)
+        else
+            0
+
+        cursor.close()
+        return result;
+    }
+
 
     fun searchSale(query: String): List<Sale>{
 
