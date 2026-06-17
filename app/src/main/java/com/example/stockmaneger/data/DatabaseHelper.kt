@@ -50,6 +50,14 @@ class DatabaseHelper(context: Context) :
         const val COL_EXP_NOTE      = "note"
         const val COL_EXP_DATE      = "date"
 
+        // ── Capitals ───────────────────────────────
+        const val TABLE_CAPITALS    = "capitals"
+        const val COL_CAP_ID        = "id"
+        const val COL_CAP_AMOUNT    = "amount"
+        const val COL_CAP_TYPE      = "type"
+        const val COL_CAP_NOTE      = "note"
+        const val COL_CAP_DATE      = "date"
+
         // ── Account ────────────────────────────────
         const val TABLE_ACCOUNT     = "account"
         const val COL_ACC_MONEY     = "totalMoney"
@@ -103,6 +111,16 @@ class DatabaseHelper(context: Context) :
             )
         """)
 
+        db.execSQL("""
+            CREATE TABLE $TABLE_CAPITALS (
+                $COL_CAP_ID     INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_CAP_AMOUNT REAL,
+                $COL_CAP_TYPE   TEXT,
+                $COL_CAP_NOTE   TEXT,
+                $COL_CAP_DATE   TEXT
+            )
+        """)
+
         // Account has only one row — created once here
         db.execSQL("""
             CREATE TABLE $TABLE_ACCOUNT (
@@ -122,6 +140,7 @@ class DatabaseHelper(context: Context) :
         db.execSQL("DROP TABLE IF EXISTS $TABLE_PRODUCTS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_SALES")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_EXPENSES")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_CAPITALS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_ACCOUNT")
         onCreate(db)
     }

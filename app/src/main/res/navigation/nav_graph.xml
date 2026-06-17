@@ -34,9 +34,15 @@
         android:id="@+id/reportsFragment"
         android:name="com.example.stockmaneger.ui.reports.ReportsFragment"
         android:label="Reports" />
+
     <fragment
         android:id="@+id/expensesFragment"
         android:name="com.example.stockmaneger.ui.account.ExpensesFragment"
         android:label="Expenses" />
+
+    <fragment
+        android:id="@+id/capitalsFragment"
+        android:name="com.example.stockmaneger.ui.account.CapitalFragment"
+        android:label="Capitals" />
 
 </navigation>

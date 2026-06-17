@@ -15,6 +15,8 @@ import androidx.navigation.fragment.findNavController
 import com.example.stockmaneger.R
 import com.example.stockmaneger.data.dao.AccountDao
 import com.example.stockmaneger.data.dao.ExpenseDao
+import com.example.stockmaneger.data.dao.CapitalDao
+import com.example.stockmaneger.data.models.Capital
 import com.example.stockmaneger.data.models.Expense
 import com.example.stockmaneger.databinding.FragmentAccountBinding
 import java.text.SimpleDateFormat
@@ -27,10 +29,11 @@ class AccountFragment : Fragment() {
 
     private lateinit var accountDao: AccountDao
     private lateinit var expenseDao: ExpenseDao
+    private lateinit var capitalDao: CapitalDao
+
     private lateinit var prefs: SharedPreferences
 
-    // In-memory capital history (stored in SharedPreferences as simple log)
-    private val PREF_CAPITAL = "capital_history"
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,15 +48,19 @@ class AccountFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         accountDao = AccountDao(requireContext())
+        capitalDao = CapitalDao(requireContext())
         expenseDao = ExpenseDao(requireContext())
         prefs      = requireActivity().getSharedPreferences("stockmaneger_prefs", android.content.Context.MODE_PRIVATE)
 
         loadSummary()
-        loadCapitalHistory()
+        loadRecentCapitals()
         loadRecentExpenses()
 
-        binding.btnAddMoney.setOnClickListener { showAddMoneyDialog() }
+        binding.btnAddMoney.setOnClickListener { showAddCapitalDialog() }
         binding.btnAddExpense.setOnClickListener { showAddExpenseDialog() }
+        binding.tvViewAllCapitals.setOnClickListener {
+            findNavController().navigate(R.id.capitalsFragment)
+        }
         binding.tvViewAllExpenses.setOnClickListener {
             findNavController().navigate(R.id.expensesFragment)
         }
@@ -62,6 +69,7 @@ class AccountFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         loadSummary()
+        loadRecentCapitals()
         loadRecentExpenses()
     }
 
@@ -71,32 +79,33 @@ class AccountFragment : Fragment() {
         binding.tvTotalExpenses.text = "$${String.format("%.2f", expenseDao.getTotalExpenses())}"
     }
 
-    private fun loadCapitalHistory() {
+    private fun loadRecentCapitals() {
         binding.layoutCapitalHistory.removeAllViews()
-        val history = prefs.getString(PREF_CAPITAL, "") ?: ""
+        val capitals = capitalDao.getAll().take(5)
 
-        if (history.isEmpty()) {
-            binding.layoutCapitalHistory.addView(emptyRow("No capital added yet"))
+        if (capitals.isEmpty()) {
+            binding.layoutCapitalHistory.addView(emptyRow("No capitals yet"))
             return
         }
 
-        // Each entry saved as "amount|description|date" separated by newlines
-        val entries = history.trim().split("\n").reversed()
 
-        entries.forEachIndexed { index, entry ->
-            val parts = entry.split("|")
-            if (parts.size < 3) return@forEachIndexed
 
-            val amount = parts[0]
-            val desc   = parts[1]
-            val date   = parts[2]
-
+        capitals.forEachIndexed { index, capital ->
             if (index > 0) binding.layoutCapitalHistory.addView(dividerView())
 
             val row = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity     = Gravity.CENTER_VERTICAL
-                setPadding(42, 28, 42, 28)
+                setPadding(42, 24, 42, 24)
+            }
+
+            val tvIcon = TextView(requireContext()).apply {
+                text = "\uD83D\uDCB0"
+                textSize = 20f
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { marginEnd = 28 }
             }
 
             val leftBlock = LinearLayout(requireContext()).apply {
@@ -104,29 +113,31 @@ class AccountFragment : Fragment() {
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
 
-            val tvDesc = TextView(requireContext()).apply {
-                text     = desc.ifEmpty { "Capital injection" }
+            val tvType = TextView(requireContext()).apply {
+                text     = capital.type
                 textSize = 14f
                 setTextColor(requireContext().getColor(R.color.text_primary))
                 setTypeface(null, android.graphics.Typeface.BOLD)
             }
 
-            val tvDate = TextView(requireContext()).apply {
-                text     = date
-                textSize = 12f
+            val tvNote = TextView(requireContext()).apply {
+                text       = if (capital.note.isNotEmpty()) capital.note else capital.date
+                textSize   = 12f
                 setTextColor(requireContext().getColor(R.color.text_secondary))
             }
 
-            leftBlock.addView(tvDesc)
-            leftBlock.addView(tvDate)
+            leftBlock.addView(tvType)
+            leftBlock.addView(tvNote)
 
             val tvAmount = TextView(requireContext()).apply {
-                text     = "+$$amount"
+                text     = "$${String.format("%.2f", capital.amount)}"
                 textSize = 14f
-                setTextColor(requireContext().getColor(R.color.success))
+                setTextColor(requireContext().getColor(R.color.primary
+                ))
                 setTypeface(null, android.graphics.Typeface.BOLD)
             }
 
+            row.addView(tvIcon)
             row.addView(leftBlock)
             row.addView(tvAmount)
             binding.layoutCapitalHistory.addView(row)
@@ -205,7 +216,7 @@ class AccountFragment : Fragment() {
 
     // ── Dialogs ──────────────────────────────────────────────────
 
-    private fun showAddMoneyDialog() {
+    private fun showAddCapitalDialog() {
         val layout = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(50, 20, 50, 0)
@@ -216,8 +227,20 @@ class AccountFragment : Fragment() {
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
 
-        val etDescription = EditText(requireContext()).apply {
-            hint      = "Description (e.g. Opening capital)"
+
+        val tvTypeLabel = TextView(requireContext()).apply {
+            text    = "Capital Type"
+            setPadding(0, 16, 0, 4)
+            setTextColor(requireContext().getColor(R.color.text_secondary))
+        }
+
+        val etType = EditText(requireContext()).apply {
+            hint      = "Type"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        }
+
+        val etNote = EditText(requireContext()).apply {
+            hint      = "Note (optional)"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         }
 
@@ -237,32 +260,40 @@ class AccountFragment : Fragment() {
         }
 
         layout.addView(etAmount)
-        layout.addView(etDescription)
+        layout.addView(tvTypeLabel)
+        layout.addView(etType)
+        layout.addView(etNote)
         layout.addView(btnDate)
 
         AlertDialog.Builder(requireContext())
             .setTitle("Add Capital")
             .setView(layout)
-            .setPositiveButton("Add") { _, _ ->
+            .setPositiveButton("Save") { _, _ ->
                 val amount = etAmount.text.toString().toDoubleOrNull()
-                val desc   = etDescription.text.toString().trim()
+                val type   = etType.text.toString().trim()
+                val note   = etNote.text.toString().trim()
 
                 if (amount == null || amount <= 0) {
                     Toast.makeText(requireContext(), "Enter a valid amount", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
 
-                // Save to account
+                capitalDao.insert(
+                    Capital(
+                        amount = amount,
+                        type = type,
+                        note = note,
+                        date = selectedDate
+                    )
+                )
+
+
                 accountDao.addMoney(amount)
 
-                // Save to capital history log in SharedPreferences
-                val existing = prefs.getString(PREF_CAPITAL, "") ?: ""
-                val newEntry = "$amount|$desc|$selectedDate"
-                prefs.edit().putString(PREF_CAPITAL, "$existing\n$newEntry".trimStart('\n')).apply()
-
                 loadSummary()
-                loadCapitalHistory()
-                Toast.makeText(requireContext(), "$$amount added to balance", Toast.LENGTH_SHORT).show()
+                loadRecentCapitals()
+                loadRecentExpenses()
+                Toast.makeText(requireContext(), "Capital saved", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
             .show()

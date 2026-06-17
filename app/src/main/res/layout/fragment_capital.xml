@@ -30,13 +30,13 @@
                 android:letterSpacing="0.1"/>
 
             <TextView
-                android:id="@+id/tvTotalCaptals"
+                android:id="@+id/tvTotalCapitals"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="$0.00"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="@color/danger"/>
+                android:textColor="@color/primary"/>
 
         </LinearLayout>
 
@@ -76,6 +76,6 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="20dp"
         android:src="@android:drawable/ic_input_add"
-        app:backgroundTint="@color/danger"/>
+        app:backgroundTint="@color/primary"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
