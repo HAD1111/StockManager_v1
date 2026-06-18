@@ -59,6 +59,7 @@ class DashboardFragment : Fragment() {
         binding.tvViewAllExpenses.setOnClickListener {
             findNavController().navigate(R.id.accountFragment)
         }
+        binding.tvBusinessName.text = accountDao.getBusinessName().toString()
     }
 
     // Called every time the fragment comes back into view

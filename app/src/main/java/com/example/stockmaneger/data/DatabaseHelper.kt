@@ -10,7 +10,7 @@ class DatabaseHelper(context: Context) :
 
     companion object {
         const val DATABASE_NAME = "stockmaneger.db"
-        const val DATABASE_VERSION = 3
+        const val DATABASE_VERSION = 8
 
 
 
@@ -27,6 +27,7 @@ class DatabaseHelper(context: Context) :
         const val COL_PROD_QTY      = "quantity"
         const val COL_PROD_BASE     = "basePrice"
         const val COL_PROD_SALE     = "salePrice"
+        const val COL_PROD_BARCODE  = "barcode"
 
         // ── Sales ──────────────────────────────────
         const val TABLE_SALES       = "sales"
@@ -80,7 +81,8 @@ class DatabaseHelper(context: Context) :
                 $COL_PROD_NAME  TEXT NOT NULL,
                 $COL_PROD_QTY   INTEGER DEFAULT 0,
                 $COL_PROD_BASE  REAL DEFAULT 0.0,
-                $COL_PROD_SALE  REAL DEFAULT 0.0
+                $COL_PROD_SALE  REAL DEFAULT 0.0,
+                $COL_PROD_BARCODE TEXT Default ''
             )
         """)
 
@@ -136,9 +138,11 @@ class DatabaseHelper(context: Context) :
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         // Drop everything and recreate when you bump DATABASE_VERSION
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_SALES")
+
         db.execSQL("DROP TABLE IF EXISTS $TABLE_CUSTOMERS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_PRODUCTS")
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_SALES")
+
         db.execSQL("DROP TABLE IF EXISTS $TABLE_EXPENSES")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_CAPITALS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_ACCOUNT")

@@ -16,6 +16,7 @@ class ProductDao(context: Context) {
             put(DatabaseHelper.COL_PROD_QTY,  product.quantity)
             put(DatabaseHelper.COL_PROD_BASE, product.basePrice)
             put(DatabaseHelper.COL_PROD_SALE, product.salePrice)
+            put(DatabaseHelper.COL_PROD_BARCODE, product.barcode)
         }
         return db.insert(DatabaseHelper.TABLE_PRODUCTS, null, values)
     }
@@ -26,6 +27,7 @@ class ProductDao(context: Context) {
             put(DatabaseHelper.COL_PROD_QTY,  product.quantity)
             put(DatabaseHelper.COL_PROD_BASE, product.basePrice)
             put(DatabaseHelper.COL_PROD_SALE, product.salePrice)
+            put(DatabaseHelper.COL_PROD_BARCODE, product.barcode)
         }
         return db.update(
             DatabaseHelper.TABLE_PRODUCTS,
@@ -124,6 +126,24 @@ class ProductDao(context: Context) {
         """)
     }
 
+    fun getByBarcode(barcode: String): Product? {
+        val cursor = db.rawQuery(
+            """
+        SELECT * FROM ${DatabaseHelper.TABLE_PRODUCTS}
+        WHERE ${DatabaseHelper.COL_PROD_BARCODE} = ?
+        LIMIT 1
+        """.trimIndent(),
+            arrayOf(barcode)
+        )
+
+        val product =
+            if (cursor.moveToFirst()) cursor.toProduct()
+            else null
+
+        cursor.close()
+        return product
+    }
+
     fun getTotalProductCount():Int{
         val cursor = db.rawQuery(
             "SELECT SUM(${DatabaseHelper.COL_PROD_QTY}) FROM ${DatabaseHelper.TABLE_PRODUCTS}",
@@ -151,10 +171,13 @@ class ProductDao(context: Context) {
 
     // Extension to avoid repeating cursor mapping
     private fun android.database.Cursor.toProduct() = Product(
-        id        = getInt(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_ID)),
-        name      = getString(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_NAME)),
-        quantity  = getInt(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_QTY)),
+        id = getInt(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_ID)),
+        name = getString(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_NAME)),
+        quantity = getInt(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_QTY)),
         basePrice = getDouble(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_BASE)),
-        salePrice = getDouble(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_SALE))
+        salePrice = getDouble(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_SALE)),
+        barcode = getString(
+            getColumnIndexOrThrow(DatabaseHelper.COL_PROD_BARCODE)
+        ) ?: ""
     )
 }

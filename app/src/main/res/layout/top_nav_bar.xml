@@ -11,7 +11,7 @@
         android:id="@+id/appName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="StockManeger"
+        android:text="StockManager"
         android:textSize="23dp"
         android:textColor="#ffcccccc"
         android:textStyle="bold"/>

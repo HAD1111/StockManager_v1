@@ -1,11 +1,13 @@
 package com.example.stockmaneger.ui.stock
 
+import com.example.stockmaneger.ui.scanner.BarcodeScannerHelper
 import android.app.AlertDialog
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -26,6 +28,10 @@ class StockFragment : Fragment() {
     private lateinit var productDao: ProductDao
     private lateinit var accountDao: AccountDao
     private lateinit var adapter: ProductAdapter
+    private lateinit var barcodeScanner: BarcodeScannerHelper
+    private var pendingBarcodeEditText: EditText? = null
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,6 +46,16 @@ class StockFragment : Fragment() {
 
         productDao = ProductDao(requireContext())
         accountDao = AccountDao(requireContext())
+
+        barcodeScanner = BarcodeScannerHelper(
+            this,
+            requireContext()
+        ) { scannedBarcode ->
+
+            pendingBarcodeEditText?.setText(
+                scannedBarcode ?: ""
+            )
+        }
 
         adapter = ProductAdapter(
             products    = mutableListOf(),
@@ -84,6 +100,7 @@ class StockFragment : Fragment() {
         val etQty   = layout.getChildAt(1) as EditText
         val etBase  = layout.getChildAt(2) as EditText
         val etSale  = layout.getChildAt(3) as EditText
+        val etBarcode = layout.getChildAt(4) as EditText
 
         AlertDialog.Builder(requireContext())
             .setTitle("Add Product")
@@ -93,16 +110,29 @@ class StockFragment : Fragment() {
                 val qty   = etQty.text.toString().toIntOrNull() ?: 0
                 val base  = etBase.text.toString().toDoubleOrNull() ?: 0.0
                 val sale  = etSale.text.toString().toDoubleOrNull() ?: 0.0
+                val barcode = etBarcode.text.toString().trim()
 
                 if (name.isNotEmpty()) {
                     // Business logic: deduct cost from total money
+                    if (barcode.isNotBlank()) {
+                        val existing = productDao.getByBarcode(barcode)
+
+                        if (existing != null) {
+                            Toast.makeText(
+                                context,
+                                "Barcode already exists",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@setPositiveButton
+                        }
+                    }
                     val totalCost = base * qty
                     val available = accountDao.getTotalMoney()
 
                     if (totalCost > available) {
-                        showWarningAndProceed(name, qty, base, sale, totalCost, available)
+                        showWarningAndProceed(name, qty, base, sale,barcode,totalCost, available)
                     } else {
-                        productDao.insert(Product(name = name, quantity = qty, basePrice = base, salePrice = sale))
+                        productDao.insert(Product(name = name, quantity = qty, basePrice = base, salePrice = sale, barcode = barcode))
                         accountDao.deductMoney(totalCost)
                         loadProducts()
                     }
@@ -113,7 +143,7 @@ class StockFragment : Fragment() {
     }
 
     private fun showWarningAndProceed(
-        name: String, qty: Int, base: Double, sale: Double,
+        name: String, qty: Int, base: Double, sale: Double, barcode: String,
         totalCost: Double, available: Double
     ) {
         AlertDialog.Builder(requireContext())
@@ -124,7 +154,7 @@ class StockFragment : Fragment() {
                         "This will result in a negative balance. Proceed anyway?"
             )
             .setPositiveButton("Proceed") { _, _ ->
-                productDao.insert(Product(name = name, quantity = qty, basePrice = base, salePrice = sale))
+                productDao.insert(Product(name = name, quantity = qty, basePrice = base, salePrice = sale, barcode = barcode))
                 accountDao.deductMoney(totalCost)
                 loadProducts()
             }
@@ -138,6 +168,7 @@ class StockFragment : Fragment() {
         qty: Int,
         base: Double,
         sale: Double,
+        barcode: String,
         needed: Double,
         available: Double
     ) {
@@ -163,7 +194,8 @@ class StockFragment : Fragment() {
                         name,
                         qty,
                         base,
-                        sale
+                        sale,
+                        barcode
                     )
                 )
 
@@ -177,13 +209,15 @@ class StockFragment : Fragment() {
             product.name,
             product.quantity,
             product.basePrice,
-            product.salePrice
+            product.salePrice,
+            product.barcode
         )
 
         val etName = layout.getChildAt(0) as EditText
         val etQty  = layout.getChildAt(1) as EditText
         val etBase = layout.getChildAt(2) as EditText
         val etSale = layout.getChildAt(3) as EditText
+        val etBarcode = layout.getChildAt(4) as EditText
 
         AlertDialog.Builder(requireContext())
             .setTitle("Edit Product")
@@ -194,9 +228,19 @@ class StockFragment : Fragment() {
                 val qty  = etQty.text.toString().toIntOrNull() ?: 0
                 val base = etBase.text.toString().toDoubleOrNull() ?: 0.0
                 val sale = etSale.text.toString().toDoubleOrNull() ?: 0.0
+                val barcode = etBarcode.text.toString().trim()
 
                 if (name.isEmpty()) return@setPositiveButton
+                val existing = productDao.getByBarcode(barcode)
 
+                if (existing != null && existing.id != product.id && existing.barcode!="") {
+                    Toast.makeText(
+                        requireContext(),
+                        "Barcode already exists",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setPositiveButton
+                }
                 val oldCost = product.quantity * product.basePrice
                 val newCost = qty * base
 
@@ -212,6 +256,7 @@ class StockFragment : Fragment() {
                             qty,
                             base,
                             sale,
+                            barcode,
                             difference,
                             available
                         )
@@ -227,7 +272,8 @@ class StockFragment : Fragment() {
                         name,
                         qty,
                         base,
-                        sale
+                        sale,
+                        barcode
                     )
                 )
 
@@ -264,7 +310,7 @@ class StockFragment : Fragment() {
 
     private fun buildFormLayout(
         name: String = "", qty: Int = 0,
-        base: Double = 0.0, sale: Double = 0.0
+        base: Double = 0.0, sale: Double = 0.0,barcode: String = ""
     ): LinearLayout {
         val layout = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
@@ -290,10 +336,31 @@ class StockFragment : Fragment() {
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
             setText(if (sale == 0.0) "" else sale.toString())
         }
+        val etBarcode = EditText(requireContext()).apply {
+            hint = "Barcode (optional)"
+            setText(barcode)
+            isFocusable = false
+            isClickable = false
+            isCursorVisible = false
+        }
+
+        pendingBarcodeEditText = etBarcode
+
+        val btnScanBarcode = Button(requireContext()).apply {
+            text = "Scan Barcode"
+
+            setOnClickListener {
+                barcodeScanner.scan()
+            }
+        }
+
+
         layout.addView(etName)
         layout.addView(etQty)
         layout.addView(etBase)
         layout.addView(etSale)
+        layout.addView(etBarcode)
+        layout.addView(btnScanBarcode)
         return layout
     }
 

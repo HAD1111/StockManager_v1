@@ -54,11 +54,14 @@ dependencies {
     implementation("org.apache.poi:poi:5.2.3")
     implementation("org.apache.poi:poi-ooxml:5.2.3")
 
+    // Barcode scanning
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 
     implementation ("androidx.compose.ui:ui:1.5.1")
     implementation ("androidx.compose.material3:material3:1.1.2")
     implementation ("androidx.compose.ui:ui-tooling-preview:1.5.1")
     implementation ("androidx.activity:activity-compose:1.8.0")
+    implementation(libs.play.services.analytics.impl)
 
     debugImplementation ("androidx.compose.ui:ui-tooling:1.5.1")
 }

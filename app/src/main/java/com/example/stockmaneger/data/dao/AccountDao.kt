@@ -65,4 +65,11 @@ class AccountDao(context: Context) {
 
     }
 
+    fun updateBusinessName(name: String) {
+        db.execSQL(
+            "UPDATE ${DatabaseHelper.TABLE_ACCOUNT} SET ${DatabaseHelper.COL_ACC_BUSINESS_NAME} = ?",
+            arrayOf(name)
+        )
+    }
+
 }

@@ -13,11 +13,13 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.stockmaneger.data.dao.AccountDao
 import com.example.stockmaneger.data.dao.CustomerDao
+
 import com.example.stockmaneger.data.dao.ProductDao
 import com.example.stockmaneger.data.dao.SaleDao
-import com.example.stockmaneger.data.models.Customer
+import com.example.stockmaneger.data.models.Product
 import com.example.stockmaneger.data.models.Sale
 import com.example.stockmaneger.databinding.FragmentSalesBinding
+import com.example.stockmaneger.ui.scanner.BarcodeScannerHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -26,11 +28,14 @@ class SalesFragment : Fragment() {
     private var _binding: FragmentSalesBinding? = null
     private val binding get() = _binding!!
 
+    private lateinit var barcodeScanner: BarcodeScannerHelper
     private lateinit var saleDao: SaleDao
     private lateinit var customerDao: CustomerDao
     private lateinit var productDao: ProductDao
     private lateinit var accountDao: AccountDao
     private lateinit var adapter: SaleAdapter
+    private var currentProducts: List<Product> = emptyList()
+    private var currentSpinner: Spinner? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -48,6 +53,32 @@ class SalesFragment : Fragment() {
         productDao  = ProductDao(requireContext())
         accountDao  = AccountDao(requireContext())
 
+        barcodeScanner = BarcodeScannerHelper(
+            this,
+            requireContext()
+        ) { scannedBarcode ->
+
+            val barcode = scannedBarcode ?: return@BarcodeScannerHelper
+
+            val product = productDao.getByBarcode(barcode)
+
+            if (product == null) {
+                Toast.makeText(
+                    requireContext(),
+                    "Product not found",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@BarcodeScannerHelper
+            }
+
+            val index = currentProducts.indexOfFirst {
+                it.id == product.id
+            }
+
+            if (index >= 0) {
+                currentSpinner?.setSelection(index)
+            }
+        }
         adapter = SaleAdapter(
             sales       = mutableListOf(),
             onLongClick = { sale -> showDeleteDialog(sale) }
@@ -109,6 +140,7 @@ class SalesFragment : Fragment() {
         }
         // Product spinner
         val products     = productDao.getAll()
+        currentProducts = products
         val productNames = products.map { "${it.name} (${it.quantity} left)" }.toTypedArray()
         val tvProductLabel = TextView(requireContext()).apply {
             text    = "Select Product"
@@ -117,6 +149,14 @@ class SalesFragment : Fragment() {
         }
         val spinnerProduct = Spinner(requireContext()).apply {
             adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, productNames)
+        }
+        currentSpinner = spinnerProduct
+        val btnScanBarcode = Button(requireContext()).apply {
+            text = "Scan Product Barcode"
+        }
+
+        btnScanBarcode.setOnClickListener {
+            barcodeScanner.scan()
         }
 
         // Quantity
@@ -169,6 +209,7 @@ class SalesFragment : Fragment() {
         layout.addView(etPhoneNumber)
         layout.addView(tvProductLabel)
         layout.addView(spinnerProduct)
+        layout.addView(btnScanBarcode)
         layout.addView(etQty)
         layout.addView(etUnitPrice)
         layout.addView(tvPaymentLabel)

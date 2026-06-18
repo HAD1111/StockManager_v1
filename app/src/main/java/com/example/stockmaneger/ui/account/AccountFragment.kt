@@ -64,6 +64,10 @@ class AccountFragment : Fragment() {
         binding.tvViewAllExpenses.setOnClickListener {
             findNavController().navigate(R.id.expensesFragment)
         }
+        binding.btnEditBusinessName.setOnClickListener {
+            showEditBusinessNameDialog()
+        }
+        binding.tvBusinessName.text = accountDao.getBusinessName().toString()
     }
 
     override fun onResume() {
@@ -397,6 +401,28 @@ class AccountFragment : Fragment() {
             ).apply { setMargins(42, 0, 42, 0) }
             setBackgroundColor(requireContext().getColor(R.color.border))
         }
+    }
+
+    private fun showEditBusinessNameDialog() {
+        val editText = EditText(requireContext())
+        editText.setText(binding.tvBusinessName.text)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Edit Business Name")
+            .setView(editText)
+            .setPositiveButton("Save") { _, _ ->
+
+                val newName = editText.text.toString().trim()
+
+                if (newName.isNotEmpty()) {
+                    accountDao.updateBusinessName(newName)
+
+                    binding.tvBusinessName.text = newName
+                    requireActivity().recreate()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     override fun onDestroyView() {
