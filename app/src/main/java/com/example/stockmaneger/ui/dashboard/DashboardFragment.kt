@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.stockmaneger.R
@@ -17,6 +16,7 @@ import com.example.stockmaneger.data.dao.ProductDao
 import com.example.stockmaneger.data.dao.SaleDao
 import com.example.stockmaneger.databinding.FragmentDashboardBinding
 import java.util.Calendar
+import java.util.Locale
 
 class DashboardFragment : Fragment() {
 
@@ -62,7 +62,6 @@ class DashboardFragment : Fragment() {
         binding.tvBusinessName.text = accountDao.getBusinessName().toString()
     }
 
-    // Called every time the fragment comes back into view
     override fun onResume() {
         super.onResume()
         loadMetrics()
@@ -82,22 +81,22 @@ class DashboardFragment : Fragment() {
     private fun loadMetrics() {
         // Balance
         val balance = accountDao.getTotalMoney()
-        binding.tvBalance.text = "$${String.format("%.2f", balance)}"
+        binding.tvBalance.text = "$${String.format(Locale.US, "%.2f", balance)}"
 
         // Revenue
         val revenue = saleDao.getTotalRevenue()
-        binding.tvRevenue.text = "$${String.format("%.2f", revenue)}"
+        binding.tvRevenue.text = "$${String.format(Locale.US, "%.2f", revenue)}"
 
         // Profit
         val profit = saleDao.getTotalProfit()
-        binding.tvProfit.text = "$${String.format("%.2f", profit)}"
+        binding.tvProfit.text = "$${String.format(Locale.US, "%.2f", profit)}"
 
         // Products + low stock count
         val products = productDao.getAll()
         binding.tvProductCount.text = products.size.toString()
         val lowCount = products.count { it.quantity <= 3 }
         if (lowCount > 0) {
-            binding.tvLowStock.text    = "⚠ $lowCount low stock"
+            binding.tvLowStock.text = "⚠ $lowCount low stock"
             binding.tvLowStock.visibility = View.VISIBLE
         } else {
             binding.tvLowStock.visibility = View.GONE
@@ -105,12 +104,12 @@ class DashboardFragment : Fragment() {
 
         // Expenses
         val totalExpenses = expenseDao.getTotalExpenses()
-        binding.tvExpenses.text = "$${String.format("%.2f", totalExpenses)}"
+        binding.tvExpenses.text = "$${String.format(Locale.US, "%.2f", totalExpenses)}"
     }
 
     private fun loadRecentSales() {
         binding.llRecentSales.removeAllViews()
-        val sales = saleDao.getAll().take(5)   // show last 5 only
+        val sales = saleDao.getAll().take(5)
 
         if (sales.isEmpty()) {
             binding.tvNoSales.visibility = View.VISIBLE
@@ -122,11 +121,16 @@ class DashboardFragment : Fragment() {
         sales.forEach { sale ->
             val row = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.HORIZONTAL
-                gravity     = android.view.Gravity.CENTER_VERTICAL
+                gravity     = Gravity.CENTER_VERTICAL
                 setPadding(48, 28, 48, 28)
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    findNavController().navigate(R.id.salesFragment)
+                }
             }
 
-            // Customer + product
+            // Customer + items summary
             val info = LinearLayout(requireContext()).apply {
                 orientation  = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -138,28 +142,45 @@ class DashboardFragment : Fragment() {
                 setTypeface(null, android.graphics.Typeface.BOLD)
             }
             val tvProduct = TextView(requireContext()).apply {
-                text      = "${sale.productName}  ×${sale.quantity}"
+                val itemsStr = "${sale.itemCount} ${if (sale.itemCount == 1) "item" else "items"}"
+                text      = "$itemsStr • ${sale.date}"
                 textSize  = 12f
                 setTextColor(requireContext().getColor(R.color.text_secondary))
             }
             info.addView(tvName)
             info.addView(tvProduct)
 
-            // Total + payment
+            // Total + status
             val right = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity     = Gravity.END
             }
             val tvTotal = TextView(requireContext()).apply {
-                text      = "$${String.format("%.2f", sale.totalPrice)}"
+                text      = "Total: $${String.format(Locale.US, "%.2f", sale.totalAmount)}"
                 textSize  = 14f
                 setTextColor(requireContext().getColor(R.color.primary))
                 setTypeface(null, android.graphics.Typeface.BOLD)
             }
             val tvPayment = TextView(requireContext()).apply {
-                text      = sale.paymentMethod
+                when {
+                    sale.paidAmount > sale.totalAmount + 0.005 -> {
+                        text = "Paid: $${String.format(Locale.US, "%.2f", sale.paidAmount)} (Overpaid)"
+                        setTextColor(requireContext().getColor(R.color.success))
+                    }
+                    sale.remainingDebt <= 0.005 -> {
+                        text = "Paid in Full (${sale.paymentMethod})"
+                        setTextColor(requireContext().getColor(R.color.success))
+                    }
+                    sale.paidAmount > 0.005 -> {
+                        text = "Paid: $${String.format(Locale.US, "%.2f", sale.paidAmount)} • Due: $${String.format(Locale.US, "%.2f", sale.remainingDebt)}"
+                        setTextColor(requireContext().getColor(R.color.danger))
+                    }
+                    else -> {
+                        text = "Unpaid • Due: $${String.format(Locale.US, "%.2f", sale.remainingDebt)}"
+                        setTextColor(requireContext().getColor(R.color.danger))
+                    }
+                }
                 textSize  = 11f
-                setTextColor(requireContext().getColor(R.color.text_secondary))
             }
             right.addView(tvTotal)
             right.addView(tvPayment)
@@ -202,7 +223,7 @@ class DashboardFragment : Fragment() {
         lowProducts.forEach { product ->
             val row = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.HORIZONTAL
-                gravity     = android.view.Gravity.CENTER_VERTICAL
+                gravity     = Gravity.CENTER_VERTICAL
                 setPadding(48, 28, 48, 28)
             }
 
@@ -241,6 +262,7 @@ class DashboardFragment : Fragment() {
             binding.llLowStock.addView(divider)
         }
     }
+
     private fun loadRecentExpenses() {
         binding.layoutRecentExpenses.removeAllViews()
         val expenses = expenseDao.getAll().take(4)
@@ -265,7 +287,7 @@ class DashboardFragment : Fragment() {
 
             val row = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.HORIZONTAL
-                gravity     = android.view.Gravity.CENTER_VERTICAL
+                gravity     = Gravity.CENTER_VERTICAL
                 setPadding(42, 24, 42, 24)
             }
 
@@ -300,7 +322,7 @@ class DashboardFragment : Fragment() {
             leftBlock.addView(tvDate)
 
             val tvAmount = TextView(requireContext()).apply {
-                text     = "-$${String.format("%.2f", expense.amount)}"
+                text     = "-$${String.format(Locale.US, "%.2f", expense.amount)}"
                 textSize = 14f
                 setTextColor(requireContext().getColor(R.color.danger))
                 setTypeface(null, android.graphics.Typeface.BOLD)

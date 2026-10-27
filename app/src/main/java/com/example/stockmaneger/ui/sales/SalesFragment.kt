@@ -3,39 +3,36 @@ package com.example.stockmaneger.ui.sales
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.os.Bundle
-import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.stockmaneger.data.dao.AccountDao
-import com.example.stockmaneger.data.dao.CustomerDao
-
-import com.example.stockmaneger.data.dao.ProductDao
+import com.example.stockmaneger.R
 import com.example.stockmaneger.data.dao.SaleDao
-import com.example.stockmaneger.data.models.Product
 import com.example.stockmaneger.data.models.Sale
 import com.example.stockmaneger.databinding.FragmentSalesBinding
-import com.example.stockmaneger.ui.scanner.BarcodeScannerHelper
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 class SalesFragment : Fragment() {
 
     private var _binding: FragmentSalesBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var barcodeScanner: BarcodeScannerHelper
     private lateinit var saleDao: SaleDao
-    private lateinit var customerDao: CustomerDao
-    private lateinit var productDao: ProductDao
-    private lateinit var accountDao: AccountDao
     private lateinit var adapter: SaleAdapter
-    private var currentProducts: List<Product> = emptyList()
-    private var currentSpinner: Spinner? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -48,61 +45,40 @@ class SalesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        saleDao     = SaleDao(requireContext())
-        customerDao = CustomerDao(requireContext())
-        productDao  = ProductDao(requireContext())
-        accountDao  = AccountDao(requireContext())
+        saleDao = SaleDao(requireContext())
 
-        barcodeScanner = BarcodeScannerHelper(
-            this,
-            requireContext()
-        ) { scannedBarcode ->
-
-            val barcode = scannedBarcode ?: return@BarcodeScannerHelper
-
-            val product = productDao.getByBarcode(barcode)
-
-            if (product == null) {
-                Toast.makeText(
-                    requireContext(),
-                    "Product not found",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@BarcodeScannerHelper
-            }
-
-            val index = currentProducts.indexOfFirst {
-                it.id == product.id
-            }
-
-            if (index >= 0) {
-                currentSpinner?.setSelection(index)
-            }
-        }
         adapter = SaleAdapter(
-            sales       = mutableListOf(),
+            sales = mutableListOf(),
+            onClick = { sale -> showSaleDetailsDialog(sale) },
             onLongClick = { sale -> showDeleteDialog(sale) }
         )
 
         binding.rvSales.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvSales.adapter       = adapter
+        binding.rvSales.adapter = adapter
 
         // Search as user types
         binding.etSearch.addTextChangedListener { text ->
-            val query = text.toString()
-            val results = if (query.isEmpty())
+            val query = text.toString().trim()
+            val results = if (query.isEmpty()) {
                 saleDao.getAll()
-            else
+            } else {
                 saleDao.searchSale(query)
+            }
             adapter.updateList(results)
             toggleEmpty(results.isEmpty())
         }
 
         loadSales()
 
+        // FAB navigates to the dedicated full-screen Cart page
         binding.fabAddSale.setOnClickListener {
-            showAddSaleDialog()
+            findNavController().navigate(R.id.cartFragment)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadSales()
     }
 
     private fun loadSales() {
@@ -110,105 +86,226 @@ class SalesFragment : Fragment() {
         adapter.updateList(list)
         toggleEmpty(list.isEmpty())
 
-        // Update summary
-        binding.tvTotalRevenue.text = "$${String.format("%.2f", saleDao.getTotalRevenue())}"
-        binding.tvTotalProfit.text  = "$${String.format("%.2f", saleDao.getTotalProfit())}"
+        // Update summary bar with total agreed sales revenue and earned gross profit
+        binding.tvTotalRevenue.text = "$${String.format(Locale.US, "%.2f", saleDao.getTotalRevenue())}"
+        binding.tvTotalProfit.text = "$${String.format(Locale.US, "%.2f", saleDao.getTotalProfit())}"
     }
 
     private fun toggleEmpty(isEmpty: Boolean) {
-        binding.rvSales.visibility = if (isEmpty) View.GONE  else View.VISIBLE
+        binding.rvSales.visibility = if (isEmpty) View.GONE else View.VISIBLE
         binding.tvEmpty.visibility = if (isEmpty) View.VISIBLE else View.GONE
     }
 
-    private fun showAddSaleDialog() {
-        val products = productDao.getAll()
-        if (products.isEmpty()) {
-            Toast.makeText(
-                requireContext(),
-                "No products in stock. Please add a product first.",
-                Toast.LENGTH_LONG
-            ).show()
-            return
-        }
+    /**
+     * Comprehensive Sale Details Dialog showing order line items, financial summary,
+     * payment installments history, installment payment action, and deletion action.
+     */
+    private fun showSaleDetailsDialog(sale: Sale) {
+        val items = saleDao.getItemsForSale(sale.id)
+        val payments = saleDao.getPaymentsForSale(sale.id)
 
-        val layout = LinearLayout(requireContext()).apply {
+        val context = requireContext()
+        val scroll = ScrollView(context)
+        val layout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(50, 20, 50, 0)
+            setPadding(48, 24, 48, 24)
         }
+        scroll.addView(layout)
 
-        // Customer autocomplete
-        val customers   = customerDao.getAll()
-        val customerNames = customers.map { it.name }.toTypedArray()
-        val etCustomer  = AutoCompleteTextView(requireContext()).apply {
-            hint      = "Customer name"
-            setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, customerNames))
-            threshold = 1
+        // Header
+        val tvHeader = TextView(context).apply {
+            text = "Order #${sale.id} • ${sale.date}"
+            textSize = 17f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(context.getColor(R.color.primary))
         }
-        val etPhoneNumber = EditText(requireContext()).apply {
-            hint        = "Phone Number"
-            inputType   = InputType.TYPE_CLASS_NUMBER
+        val tvCust = TextView(context).apply {
+            text = "Customer: ${sale.customerName}${if (sale.customerPhone.isNotEmpty()) " (${sale.customerPhone})" else ""}"
+            textSize = 14f
+            setTextColor(context.getColor(R.color.text_primary))
+            setPadding(0, 4, 0, 16)
         }
-        // Product spinner
-        currentProducts = products
-        val productNames = products.map { "${it.name} (${it.quantity} left)" }.toTypedArray()
-        val tvProductLabel = TextView(requireContext()).apply {
-            text    = "Select Product"
-            setPadding(0, 16, 0, 4)
-            setTextColor(requireContext().getColor(com.example.stockmaneger.R.color.text_secondary))
-        }
-        val spinnerProduct = Spinner(requireContext()).apply {
-            adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, productNames)
-        }
-        currentSpinner = spinnerProduct
-        val btnScanBarcode = Button(requireContext()).apply {
-            text = "Scan Product Barcode"
-        }
+        layout.addView(tvHeader)
+        layout.addView(tvCust)
 
-        btnScanBarcode.setOnClickListener {
-            barcodeScanner.scan()
+        // Items Section Header
+        val tvItemsHeader = TextView(context).apply {
+            text = "ITEMS SOLD (${items.size})"
+            textSize = 11f
+            setTextColor(context.getColor(R.color.text_secondary))
+            letterSpacing = 0.05f
+            setPadding(0, 8, 0, 8)
         }
+        layout.addView(tvItemsHeader)
 
-        // Quantity
-        val etQty = EditText(requireContext()).apply {
-            hint      = "Quantity"
-            inputType = InputType.TYPE_CLASS_NUMBER
-        }
-
-        // Unit price — auto fills when product selected
-        val etUnitPrice = EditText(requireContext()).apply {
-            hint      = "Unit sale price"
-            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
-        }
-
-        // Auto fill price when product selected
-        spinnerProduct.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, v: View?, pos: Int, id: Long) {
-                if (pos in products.indices) {
-                    etUnitPrice.setText(products[pos].salePrice.toString())
-                }
+        // List line items
+        for (item in items) {
+            val itemRow = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(0, 8, 0, 8)
             }
-            override fun onNothingSelected(parent: AdapterView<*>) {}
+            val left = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val tvName = TextView(context).apply {
+                text = "${item.quantity}x ${item.productName}"
+                textSize = 14f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(context.getColor(R.color.text_primary))
+            }
+            val tvUnit = TextView(context).apply {
+                text = "@ $${String.format(Locale.US, "%.2f", item.unitPrice)} (Cost: $${String.format(Locale.US, "%.2f", item.unitCost)})"
+                textSize = 12f
+                setTextColor(context.getColor(R.color.text_secondary))
+            }
+            left.addView(tvName)
+            left.addView(tvUnit)
+
+            val tvSub = TextView(context).apply {
+                text = "$${String.format(Locale.US, "%.2f", item.subtotal)}"
+                textSize = 14f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(context.getColor(R.color.primary))
+            }
+            itemRow.addView(left)
+            itemRow.addView(tvSub)
+            layout.addView(itemRow)
         }
 
-        // Payment method
-        val tvPaymentLabel = TextView(requireContext()).apply {
-            text    = "Payment Method"
-            setPadding(0, 16, 0, 4)
-            setTextColor(requireContext().getColor(com.example.stockmaneger.R.color.text_secondary))
+        // Financial Summary Block
+        layout.addView(divider(context))
+        val summaryLayout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, 8, 0, 8)
         }
-        val paymentMethods = arrayOf("Cash", "Omt", "Whish", "Crypto")
-        val spinnerPayment = Spinner(requireContext()).apply {
-            adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, paymentMethods)
+        summaryLayout.addView(twoColumnRow(context, "Agreed Sale Value:", "$${String.format(Locale.US, "%.2f", sale.totalAmount)}", isBold = true))
+        summaryLayout.addView(twoColumnRow(context, "Cost of Goods:", "$${String.format(Locale.US, "%.2f", sale.totalCost)}"))
+        summaryLayout.addView(twoColumnRow(context, "Total Cash Paid:", "$${String.format(Locale.US, "%.2f", sale.paidAmount)}", isBold = true))
+        summaryLayout.addView(twoColumnRow(context, "Recognized Revenue:", "$${String.format(Locale.US, "%.2f", sale.recognizedRevenue)}"))
+        summaryLayout.addView(twoColumnRow(
+            context,
+            "Recognized Profit:",
+            "$${String.format(Locale.US, "%.2f", sale.recognizedProfit)}",
+            colorRes = if (sale.recognizedProfit > 0.005) R.color.success else R.color.text_primary,
+            isBold = true
+        ))
+        summaryLayout.addView(twoColumnRow(
+            context,
+            "Outstanding Balance (Due):",
+            "$${String.format(Locale.US, "%.2f", sale.remainingDebt)}",
+            colorRes = if (sale.remainingDebt <= 0.005) R.color.success else R.color.danger,
+            isBold = true
+        ))
+        layout.addView(summaryLayout)
+
+        // Payments History Section
+        layout.addView(divider(context))
+        val tvPayHeader = TextView(context).apply {
+            text = "PAYMENT HISTORY (${payments.size})"
+            textSize = 11f
+            setTextColor(context.getColor(R.color.text_secondary))
+            letterSpacing = 0.05f
+            setPadding(0, 8, 0, 8)
+        }
+        layout.addView(tvPayHeader)
+
+        if (payments.isEmpty()) {
+            val tvNoPay = TextView(context).apply {
+                text = "No payments recorded (Unpaid sale)"
+                textSize = 13f
+                setTextColor(context.getColor(R.color.danger))
+                setPadding(0, 4, 0, 8)
+            }
+            layout.addView(tvNoPay)
+        } else {
+            for (p in payments) {
+                val pRow = LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    setPadding(0, 4, 0, 4)
+                }
+                val tvPDesc = TextView(context).apply {
+                    text = "${p.paymentDate} • ${p.paymentMethod}${if (p.note.isNotEmpty()) " (${p.note})" else ""}"
+                    textSize = 13f
+                    setTextColor(context.getColor(R.color.text_primary))
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }
+                val tvPAmount = TextView(context).apply {
+                    text = "+$${String.format(Locale.US, "%.2f", p.amount)}"
+                    textSize = 13f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(context.getColor(R.color.success))
+                }
+                pRow.addView(tvPDesc)
+                pRow.addView(tvPAmount)
+                layout.addView(pRow)
+            }
         }
 
-        // Date picker
+        val dialogBuilder = AlertDialog.Builder(context)
+            .setTitle("Sale Details")
+            .setView(scroll)
+            .setPositiveButton("Close", null)
+
+        // Allow adding an installment
+        dialogBuilder.setNeutralButton("+ Add Payment") { _, _ ->
+            showAddPaymentDialog(sale)
+        }
+
+        dialogBuilder.setNegativeButton("Delete Sale") { _, _ ->
+            showDeleteDialog(sale)
+        }
+
+        dialogBuilder.show()
+    }
+
+    /**
+     * Dialog to record a subsequent payment installment.
+     */
+    private fun showAddPaymentDialog(sale: Sale) {
+        val context = requireContext()
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 20, 48, 0)
+        }
+
+        val tvPrompt = TextView(context).apply {
+            text = if (sale.remainingDebt <= 0.005) {
+                "Order #${sale.id} is already paid in full. Extra payment will be recorded as overpayment cash."
+            } else {
+                "Order #${sale.id} • Balance due: $${String.format(Locale.US, "%.2f", sale.remainingDebt)}"
+            }
+            textSize = 14f
+            setTextColor(context.getColor(if (sale.remainingDebt <= 0.005) R.color.success else R.color.danger))
+            setPadding(0, 0, 0, 12)
+        }
+
+        val etAmount = EditText(context).apply {
+            hint = "Payment Amount"
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+            // Pre-fill with remaining debt if any, else empty
+            if (sale.remainingDebt > 0.005) {
+                setText(String.format(Locale.US, "%.2f", sale.remainingDebt))
+            }
+        }
+
+        val paymentMethods = arrayOf("Cash", "OMT", "Whish", "Crypto")
+        val spinnerMethod = Spinner(context).apply {
+            adapter = ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, paymentMethods)
+        }
+
+        val etNote = EditText(context).apply {
+            hint = "Note (e.g. Installment #2)"
+        }
+
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         var selectedDate = dateFormat.format(calendar.time)
-        val btnDate = Button(requireContext()).apply {
+
+        val btnDate = Button(context).apply {
             text = "📅 Date: $selectedDate"
             setOnClickListener {
-                DatePickerDialog(requireContext(), { _, y, m, d ->
+                DatePickerDialog(context, { _, y, m, d ->
                     calendar.set(y, m, d)
                     selectedDate = dateFormat.format(calendar.time)
                     text = "📅 Date: $selectedDate"
@@ -216,80 +313,44 @@ class SalesFragment : Fragment() {
             }
         }
 
-        layout.addView(etCustomer)
-        layout.addView(etPhoneNumber)
-        layout.addView(tvProductLabel)
-        layout.addView(spinnerProduct)
-        layout.addView(btnScanBarcode)
-        layout.addView(etQty)
-        layout.addView(etUnitPrice)
-        layout.addView(tvPaymentLabel)
-        layout.addView(spinnerPayment)
+        layout.addView(tvPrompt)
+        layout.addView(etAmount)
+        layout.addView(spinnerMethod)
+        layout.addView(etNote)
         layout.addView(btnDate)
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Add Sale")
+        AlertDialog.Builder(context)
+            .setTitle("Record Payment")
             .setView(layout)
-            .setPositiveButton("Save") { _, _ ->
-                val customerName  = etCustomer.text.toString().trim()
-                val customerPhoneNumber = etPhoneNumber.text.toString()
-                val productPosition = spinnerProduct.selectedItemPosition
-                if (productPosition !in products.indices) {
-                    Toast.makeText(requireContext(), "Please select a valid product", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-                val selectedProduct = products[productPosition]
-                val qty           = etQty.text.toString().toIntOrNull() ?: 0
-                val unitPrice     = etUnitPrice.text.toString().toDoubleOrNull() ?: selectedProduct.salePrice
-                val paymentPosition = spinnerPayment.selectedItemPosition
-                val paymentMethod = if (paymentPosition in paymentMethods.indices) {
-                    paymentMethods[paymentPosition]
-                } else {
-                    "Cash"
-                }
+            .setPositiveButton("Save Payment") { _, _ ->
+                val amount = etAmount.text.toString().toDoubleOrNull()
+                val method = paymentMethods[spinnerMethod.selectedItemPosition]
+                val note = etNote.text.toString().trim()
 
-                if (customerName.isEmpty() || qty <= 0) {
-                    Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show()
+                if (amount == null || amount <= 0.0) {
+                    Toast.makeText(context, "Please enter a valid payment amount > 0", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
 
-                if (qty > selectedProduct.quantity) {
-                    Toast.makeText(requireContext(), "Not enough stock! Available: ${selectedProduct.quantity}", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
+                try {
+                    saleDao.addPayment(
+                        saleId = sale.id,
+                        amount = amount,
+                        paymentMethod = method,
+                        date = selectedDate,
+                        note = note
+                    )
+                    Toast.makeText(context, "Payment recorded successfully", Toast.LENGTH_SHORT).show()
+                    loadSales()
+
+                    // Re-open fresh details dialog with updated payments and balance
+                    val freshSale = saleDao.getById(sale.id)
+                    if (freshSale != null) {
+                        showSaleDetailsDialog(freshSale)
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Payment error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
-
-                // Find or create customer
-                var customer = customerDao.searchByName(customerName).firstOrNull()
-                if (customer == null) {
-                    val newId = customerDao.insert(com.example.stockmaneger.data.models.Customer(name = customerName, phone = customerPhoneNumber))
-                    customer = com.example.stockmaneger.data.models.Customer(newId.toInt(), customerName, "")
-                }
-
-                // Calculate
-                val totalPrice = unitPrice * qty
-                val totalBase  = selectedProduct.basePrice * qty
-                val profit     = totalPrice - totalBase
-
-                // Save sale
-                saleDao.insert(Sale(
-                    customerId    = customer.id,
-                    productId     = selectedProduct.id,
-                    quantity      = qty,
-                    unitPrice     = unitPrice,
-                    totalPrice    = totalPrice,
-                    basePrice     = totalBase,
-                    profit        = profit,
-                    date          = selectedDate,
-                    paymentMethod = paymentMethod
-                ))
-
-                // Update stock and account
-                productDao.decreaseQuantity(selectedProduct.id, qty)
-                accountDao.addMoney(totalPrice)
-                accountDao.addProfit(profit)
-
-                loadSales()
-                Toast.makeText(requireContext(), "Sale saved!", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -297,14 +358,52 @@ class SalesFragment : Fragment() {
 
     private fun showDeleteDialog(sale: Sale) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Delete Sale")
-            .setMessage("Delete this sale? This cannot be undone.")
+            .setTitle("Delete Sale #${sale.id}")
+            .setMessage("Delete this sale? All inventory will be restored to stock, and actual recorded payments will be reversed from your balance.\n\nThis cannot be undone.")
             .setPositiveButton("Delete") { _, _ ->
                 saleDao.delete(sale.id)
                 loadSales()
+                Toast.makeText(requireContext(), "Sale deleted & stock restored", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun divider(context: android.content.Context): View {
+        return View(context).apply {
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 1).apply {
+                setMargins(0, 12, 0, 12)
+            }
+            setBackgroundColor(context.getColor(R.color.border))
+        }
+    }
+
+    private fun twoColumnRow(
+        context: android.content.Context,
+        label: String,
+        value: String,
+        colorRes: Int = R.color.text_primary,
+        isBold: Boolean = false
+    ): LinearLayout {
+        return LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 4, 0, 4)
+
+            val tvLabel = TextView(context).apply {
+                text = label
+                textSize = 13f
+                setTextColor(context.getColor(R.color.text_secondary))
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val tvVal = TextView(context).apply {
+                text = value
+                textSize = 14f
+                setTextColor(context.getColor(colorRes))
+                if (isBold) setTypeface(null, android.graphics.Typeface.BOLD)
+            }
+            addView(tvLabel)
+            addView(tvVal)
+        }
     }
 
     override fun onDestroyView() {

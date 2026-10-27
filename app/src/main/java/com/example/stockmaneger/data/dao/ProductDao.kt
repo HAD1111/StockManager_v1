@@ -6,8 +6,7 @@ import com.example.stockmaneger.data.DatabaseHelper
 import com.example.stockmaneger.data.models.Product
 
 class ProductDao(context: Context) {
-    private val accountDao= AccountDao(context)
-
+    private val accountDao = AccountDao(context)
     private val db = DatabaseHelper(context).writableDatabase
 
     fun insert(product: Product): Long {
@@ -38,9 +37,8 @@ class ProductDao(context: Context) {
     }
 
     fun delete(id: Int): Int {
-
         val salesCursor = db.rawQuery(
-            "SELECT 1 FROM ${DatabaseHelper.TABLE_SALES} WHERE ${DatabaseHelper.COL_SALE_PROD_ID}=? LIMIT 1",
+            "SELECT 1 FROM ${DatabaseHelper.TABLE_SALE_ITEMS} WHERE ${DatabaseHelper.COL_ITEM_PROD_ID}=? LIMIT 1",
             arrayOf(id.toString())
         )
 
@@ -53,19 +51,17 @@ class ProductDao(context: Context) {
 
         val productCursor = db.rawQuery(
             """
-        SELECT ${DatabaseHelper.COL_PROD_QTY},
-               ${DatabaseHelper.COL_PROD_BASE}
-        FROM ${DatabaseHelper.TABLE_PRODUCTS}
-        WHERE ${DatabaseHelper.COL_PROD_ID}=?
-        """.trimIndent(),
+            SELECT ${DatabaseHelper.COL_PROD_QTY},
+                   ${DatabaseHelper.COL_PROD_BASE}
+            FROM ${DatabaseHelper.TABLE_PRODUCTS}
+            WHERE ${DatabaseHelper.COL_PROD_ID}=?
+            """.trimIndent(),
             arrayOf(id.toString())
         )
 
         if (productCursor.moveToFirst()) {
-            inventoryValue =
-                productCursor.getInt(0) * productCursor.getDouble(1)
+            inventoryValue = productCursor.getInt(0) * productCursor.getDouble(1)
         }
-
         productCursor.close()
 
         val deletedRows = db.delete(
@@ -119,65 +115,53 @@ class ProductDao(context: Context) {
     }
 
     fun decreaseQuantity(productId: Int, amount: Int) {
-        db.execSQL("""
-            UPDATE ${DatabaseHelper.TABLE_PRODUCTS}
-            SET ${DatabaseHelper.COL_PROD_QTY} = ${DatabaseHelper.COL_PROD_QTY} - $amount
-            WHERE ${DatabaseHelper.COL_PROD_ID} = $productId
-        """)
+        db.execSQL(
+            "UPDATE ${DatabaseHelper.TABLE_PRODUCTS} SET ${DatabaseHelper.COL_PROD_QTY} = ${DatabaseHelper.COL_PROD_QTY} - ? WHERE ${DatabaseHelper.COL_PROD_ID} = ?",
+            arrayOf(amount, productId)
+        )
     }
 
     fun getByBarcode(barcode: String): Product? {
         val cursor = db.rawQuery(
             """
-        SELECT * FROM ${DatabaseHelper.TABLE_PRODUCTS}
-        WHERE ${DatabaseHelper.COL_PROD_BARCODE} = ?
-        LIMIT 1
-        """.trimIndent(),
+            SELECT * FROM ${DatabaseHelper.TABLE_PRODUCTS}
+            WHERE ${DatabaseHelper.COL_PROD_BARCODE} = ?
+            LIMIT 1
+            """.trimIndent(),
             arrayOf(barcode)
         )
 
-        val product =
-            if (cursor.moveToFirst()) cursor.toProduct()
-            else null
-
+        val product = if (cursor.moveToFirst()) cursor.toProduct() else null
         cursor.close()
         return product
     }
 
-    fun getTotalProductCount():Int{
+    fun getTotalProductCount(): Int {
         val cursor = db.rawQuery(
             "SELECT SUM(${DatabaseHelper.COL_PROD_QTY}) FROM ${DatabaseHelper.TABLE_PRODUCTS}",
             null
         )
-        val result = if(cursor.moveToFirst())
-            cursor.getInt(0)
-        else
-            0
+        val result = if (cursor.moveToFirst()) cursor.getInt(0) else 0
+        cursor.close()
         return result
     }
 
     fun getTotalCategories(): Int {
         val cursor = db.rawQuery(
-            "SELECT COUNT(*) FROM ${DatabaseHelper.TABLE_PRODUCTS}" +
-                    "",
+            "SELECT COUNT(*) FROM ${DatabaseHelper.TABLE_PRODUCTS}",
             null
         )
-        val result = if(cursor.moveToFirst())
-            cursor.getInt(0)
-        else
-            0
+        val result = if (cursor.moveToFirst()) cursor.getInt(0) else 0
+        cursor.close()
         return result
     }
 
-    // Extension to avoid repeating cursor mapping
     private fun android.database.Cursor.toProduct() = Product(
         id = getInt(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_ID)),
         name = getString(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_NAME)),
         quantity = getInt(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_QTY)),
         basePrice = getDouble(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_BASE)),
         salePrice = getDouble(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_SALE)),
-        barcode = getString(
-            getColumnIndexOrThrow(DatabaseHelper.COL_PROD_BARCODE)
-        ) ?: ""
+        barcode = getString(getColumnIndexOrThrow(DatabaseHelper.COL_PROD_BARCODE)) ?: ""
     )
 }

@@ -3,8 +3,6 @@ package com.example.stockmaneger.data.dao
 
 import android.content.ContentValues
 import android.content.Context
-import android.widget.Toast
-import com.example.stockmaneger.MainActivity
 import com.example.stockmaneger.data.DatabaseHelper
 import com.example.stockmaneger.data.models.Customer
 
@@ -34,10 +32,15 @@ class CustomerDao(context: Context) {
     }
 
     fun delete(id: Int): Int {
-        val sales = db.rawQuery("SELECT 1 FROM ${ DatabaseHelper.TABLE_SALES} WHERE ${ DatabaseHelper.COL_SALE_CUST_ID}=?",arrayOf(id.toString()))
-        if(sales.moveToFirst()) {
+        val sales = db.rawQuery(
+            "SELECT 1 FROM ${DatabaseHelper.TABLE_SALES} WHERE ${DatabaseHelper.COL_SALE_CUST_ID}=?",
+            arrayOf(id.toString())
+        )
+        if (sales.moveToFirst()) {
+            sales.close()
             return 0
         }
+        sales.close()
         return db.delete(
             DatabaseHelper.TABLE_CUSTOMERS,
             "${DatabaseHelper.COL_CUST_ID} = ?",
@@ -81,9 +84,34 @@ class CustomerDao(context: Context) {
         }
     }
 
+    fun getCustomerDebt(customerId: Int): Double {
+        val cursor = db.rawQuery(
+            """
+            SELECT s.totalAmount, COALESCE(p.paid, 0.0)
+            FROM ${DatabaseHelper.TABLE_SALES} s
+            LEFT JOIN (
+                SELECT saleId, SUM(amount) AS paid
+                FROM ${DatabaseHelper.TABLE_PAYMENTS}
+                GROUP BY saleId
+            ) p ON s.id = p.saleId
+            WHERE s.customerId = ?
+            """.trimIndent(),
+            arrayOf(customerId.toString())
+        )
+
+        var totalDebt = 0.0
+        while (cursor.moveToNext()) {
+            val total = cursor.getDouble(0)
+            val paid = cursor.getDouble(1)
+            val remaining = (total - paid).coerceAtLeast(0.0)
+            totalDebt += remaining
+        }
+        cursor.close()
+        return totalDebt
+    }
+
     fun isLebaneseNumber(input: String): Boolean {
         val number = input.trim().replace(" ", "")
-
         val cleaned = number.removePrefix("+").removePrefix("00")
 
         if (cleaned.startsWith("961")) {
@@ -94,15 +122,15 @@ class CustomerDao(context: Context) {
         return Regex("""^(3|70|71|76|78|79|81|82|83|84|85|86|87|88|89)\d{6}$""")
             .matches(cleaned)
     }
-    // Used in the sales form — search by name as user types
+
     fun searchByName(query: String): List<Customer> {
         val tokens = query.split(" ")
         val phone = tokens.filter { isLebaneseNumber(it) }
-        val name = tokens.filter { !isLebaneseNumber(it)}
+        val name = tokens.filter { !isLebaneseNumber(it) }
         val where = StringBuilder("WHERE 1=1 ")
 
-        for(p in phone) where.append(" AND ${DatabaseHelper.COL_CUST_PHONE} LIKE '%$p%' ")
-        for(n in name) where.append(" AND ${DatabaseHelper.COL_CUST_NAME} LIKE '%$n%' ")
+        for (p in phone) where.append(" AND ${DatabaseHelper.COL_CUST_PHONE} LIKE '%$p%' ")
+        for (n in name) where.append(" AND ${DatabaseHelper.COL_CUST_NAME} LIKE '%$n%' ")
 
         val list = mutableListOf<Customer>()
         val cursor = db.rawQuery(
@@ -124,16 +152,11 @@ class CustomerDao(context: Context) {
 
     fun getTotalCustomer(): Int {
         val cursor = db.rawQuery(
-            "SELECT COUNT(${DatabaseHelper.COL_CUST_ID}) FROM (${DatabaseHelper.TABLE_CUSTOMERS})",
+            "SELECT COUNT(${DatabaseHelper.COL_CUST_ID}) FROM ${DatabaseHelper.TABLE_CUSTOMERS}",
             null
         )
-        val result = if (cursor.moveToFirst()){
-            cursor.getInt(0)
-        }
-        else
-            0
+        val result = if (cursor.moveToFirst()) cursor.getInt(0) else 0
         cursor.close()
         return result
     }
-
 }

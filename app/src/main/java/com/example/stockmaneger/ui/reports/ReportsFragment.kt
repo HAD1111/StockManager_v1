@@ -2,17 +2,13 @@ package com.example.stockmaneger.ui.reports
 
 import androidx.activity.result.contract.ActivityResultContracts
 import java.io.ByteArrayOutputStream
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -28,7 +24,6 @@ import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,10 +38,8 @@ class ReportsFragment : Fragment() {
     private lateinit var expenseDao: ExpenseDao
     private lateinit var accountDao: AccountDao
 
-    // ── Change your business name here ──
     private var BUSINESS_NAME = "Stock Manager"
 
-    //////
     private var pendingWorkbook: XSSFWorkbook? = null
     private var pendingPdfBytes: ByteArray? = null
 
@@ -140,11 +133,11 @@ class ReportsFragment : Fragment() {
 
         binding.btnBack.setOnClickListener { findNavController().navigateUp() }
 
-        binding.btnSalesPdf.setOnClickListener     { exportSalesPdf() }
-        binding.btnCustomersPdf.setOnClickListener { exportCustomersPdf() }
-        binding.btnStockPdf.setOnClickListener     { exportStockPdf() }
-        binding.btnSalesExcel.setOnClickListener   { exportSalesExcel() }
-        binding.btnStockExcel.setOnClickListener   { exportStockExcel() }
+        binding.btnSalesPdf.setOnClickListener       { exportSalesPdf() }
+        binding.btnCustomersPdf.setOnClickListener   { exportCustomersPdf() }
+        binding.btnStockPdf.setOnClickListener       { exportStockPdf() }
+        binding.btnSalesExcel.setOnClickListener     { exportSalesExcel() }
+        binding.btnStockExcel.setOnClickListener     { exportStockExcel() }
         binding.btnCustomersExcel.setOnClickListener { exportCustomersExcel() }
     }
 
@@ -155,41 +148,41 @@ class ReportsFragment : Fragment() {
     private fun exportSalesPdf() {
         try {
             val sales    = saleDao.getAll()
-            val fileName = "Sales_Report_${today()}.pdf"
             val document = Document()
-            val output = ByteArrayOutputStream()
+            val output   = ByteArrayOutputStream()
 
-            PdfWriter.getInstance(
-                document,
-                output
-            )
+            PdfWriter.getInstance(document, output)
             document.open()
+
             // Header
             addPdfHeader(document, "Sales Report")
 
             // Summary
             val totalRevenue = saleDao.getTotalRevenue()
             val totalProfit  = saleDao.getTotalProfit()
-            document.add(Paragraph("Total Revenue: $${String.format("%.2f", totalRevenue)}", boldFont()))
-            document.add(Paragraph("Total Profit:  $${String.format("%.2f", totalProfit)}", boldFont()))
+            val totalCount   = sales.size
+            document.add(Paragraph("Total Orders:  $totalCount", boldFont()))
+            document.add(Paragraph("Total Revenue: $${String.format(Locale.US, "%.2f", totalRevenue)}", boldFont()))
+            document.add(Paragraph("Total Profit:  $${String.format(Locale.US, "%.2f", totalProfit)}", boldFont()))
             document.add(Paragraph(" "))
 
-            // Table
-            val table = PdfPTable(7)
+            // Table (8 columns: Order #, Date, Customer, Items, Total, Paid, Debt, Profit)
+            val table = PdfPTable(8)
             table.widthPercentage = 100f
-            table.setWidths(floatArrayOf(1.5f, 2f, 2f, 1f, 1.5f, 1.5f, 2f))
+            table.setWidths(floatArrayOf(1.2f, 1.8f, 2.2f, 1.0f, 1.4f, 1.4f, 1.4f, 1.4f))
 
-            addPdfHeader(table, listOf("Date", "Customer", "Product", "Qty", "Price", "Profit", "Payment"))
+            addPdfHeader(table, listOf("Order #", "Date", "Customer", "Items", "Total ($)", "Paid ($)", "Debt ($)", "Profit ($)"))
 
             sales.forEach { sale ->
                 addPdfRow(table, listOf(
+                    "#${sale.id}",
                     sale.date,
                     sale.customerName,
-                    sale.productName,
-                    sale.quantity.toString(),
-                    "$${String.format("%.2f", sale.totalPrice)}",
-                    "$${String.format("%.2f", sale.profit)}",
-                    sale.paymentMethod
+                    sale.itemCount.toString(),
+                    "$${String.format(Locale.US, "%.2f", sale.totalAmount)}",
+                    "$${String.format(Locale.US, "%.2f", sale.paidAmount)}",
+                    "$${String.format(Locale.US, "%.2f", sale.remainingDebt)}",
+                    "$${String.format(Locale.US, "%.2f", sale.profit)}"
                 ))
             }
 
@@ -208,31 +201,29 @@ class ReportsFragment : Fragment() {
     private fun exportCustomersPdf() {
         try {
             val customers = customerDao.getAll()
-            val fileName  = "Customers_Report_${today()}.pdf"
             val document  = Document()
-            val output = ByteArrayOutputStream()
+            val output    = ByteArrayOutputStream()
 
-            PdfWriter.getInstance(
-                document,
-                output
-            )
+            PdfWriter.getInstance(document, output)
             document.open()
 
             addPdfHeader(document, "Customers Report")
             document.add(Paragraph("Total Customers: ${customers.size}", boldFont()))
             document.add(Paragraph(" "))
 
-            val table = PdfPTable(3)
+            val table = PdfPTable(4)
             table.widthPercentage = 100f
-            table.setWidths(floatArrayOf(1f, 3f, 2f))
+            table.setWidths(floatArrayOf(1f, 3f, 2.5f, 2f))
 
-            addPdfHeader(table, listOf("#", "Name", "Phone"))
+            addPdfHeader(table, listOf("#", "Name", "Phone", "Outstanding Debt ($)"))
 
             customers.forEachIndexed { i, customer ->
+                val debt = customerDao.getCustomerDebt(customer.id)
                 addPdfRow(table, listOf(
                     (i + 1).toString(),
                     customer.name,
-                    customer.phone.ifEmpty { "—" }
+                    customer.phone.ifEmpty { "—" },
+                    "$${String.format(Locale.US, "%.2f", debt)}"
                 ))
             }
 
@@ -240,7 +231,7 @@ class ReportsFragment : Fragment() {
             document.close()
 
             pendingPdfBytes = output.toByteArray()
-            pdfSaver.launch("Sales_Report_${today()}.pdf")
+            pdfSaver.launch("Customers_Report_${today()}.pdf")
             Toast.makeText(requireContext(), "Customers PDF exported", Toast.LENGTH_SHORT).show()
 
         } catch (e: Exception) {
@@ -251,14 +242,10 @@ class ReportsFragment : Fragment() {
     private fun exportStockPdf() {
         try {
             val products = productDao.getAll()
-            val fileName = "Stock_Report_${today()}.pdf"
             val document = Document()
-            val output = ByteArrayOutputStream()
+            val output   = ByteArrayOutputStream()
 
-            PdfWriter.getInstance(
-                document,
-                output
-            )
+            PdfWriter.getInstance(document, output)
             document.open()
 
             addPdfHeader(document, "Stock Report")
@@ -280,8 +267,8 @@ class ReportsFragment : Fragment() {
                 addPdfRow(table, listOf(
                     product.name,
                     product.quantity.toString(),
-                    "$${String.format("%.2f", product.basePrice)}",
-                    "$${String.format("%.2f", product.salePrice)}",
+                    "$${String.format(Locale.US, "%.2f", product.basePrice)}",
+                    "$${String.format(Locale.US, "%.2f", product.salePrice)}",
                     status
                 ))
             }
@@ -290,7 +277,7 @@ class ReportsFragment : Fragment() {
             document.close()
 
             pendingPdfBytes = output.toByteArray()
-            pdfSaver.launch("Sales_Report_${today()}.pdf")
+            pdfSaver.launch("Stock_Report_${today()}.pdf")
             Toast.makeText(requireContext(), "Stock PDF exported", Toast.LENGTH_SHORT).show()
 
         } catch (e: Exception) {
@@ -306,36 +293,64 @@ class ReportsFragment : Fragment() {
         try {
             val sales    = saleDao.getAll()
             val workbook = XSSFWorkbook()
-            val sheet    = workbook.createSheet("Sales")
 
-            // Header row
-            val headerRow = sheet.createRow(0)
-            listOf("Date", "Customer", "Product", "Qty", "Unit Price", "Total", "Profit", "Payment").forEachIndexed { i, title ->
-                headerRow.createCell(i).setCellValue(title)
+            // Sheet 1: Orders
+            val ordersSheet = workbook.createSheet("Orders")
+            val ordersHeader = ordersSheet.createRow(0)
+            listOf("Order ID", "Date", "Customer", "Items Count", "Total Amount ($)", "Amount Paid ($)", "Remaining Debt ($)", "Gross Profit ($)").forEachIndexed { i, title ->
+                ordersHeader.createCell(i).setCellValue(title)
             }
 
-            // Data rows
             sales.forEachIndexed { index, sale ->
-                val row = sheet.createRow(index + 1)
-                row.createCell(0).setCellValue(sale.date)
-                row.createCell(1).setCellValue(sale.customerName)
-                row.createCell(2).setCellValue(sale.productName)
-                row.createCell(3).setCellValue(sale.quantity.toDouble())
-                row.createCell(4).setCellValue(sale.unitPrice)
-                row.createCell(5).setCellValue(sale.totalPrice)
-                row.createCell(6).setCellValue(sale.profit)
-                row.createCell(7).setCellValue(sale.paymentMethod)
+                val row = ordersSheet.createRow(index + 1)
+                row.createCell(0).setCellValue(sale.id.toDouble())
+                row.createCell(1).setCellValue(sale.date)
+                row.createCell(2).setCellValue(sale.customerName)
+                row.createCell(3).setCellValue(sale.itemCount.toDouble())
+                row.createCell(4).setCellValue(sale.totalAmount)
+                row.createCell(5).setCellValue(sale.paidAmount)
+                row.createCell(6).setCellValue(sale.remainingDebt)
+                row.createCell(7).setCellValue(sale.profit)
             }
 
-            // Auto size columns
-            sheet.setColumnWidth(0, 5000) // Date
-            sheet.setColumnWidth(1, 7000) // Customer
-            sheet.setColumnWidth(2, 7000) // Product
-            sheet.setColumnWidth(3, 3000) // Qty
-            sheet.setColumnWidth(4, 4000) // Unit Price
-            sheet.setColumnWidth(5, 4000) // Total
-            sheet.setColumnWidth(6, 4000) // Profit
-            sheet.setColumnWidth(7, 5000) // Payment
+            ordersSheet.setColumnWidth(0, 3000) // Order ID
+            ordersSheet.setColumnWidth(1, 5000) // Date
+            ordersSheet.setColumnWidth(2, 7000) // Customer
+            ordersSheet.setColumnWidth(3, 3500) // Items Count
+            ordersSheet.setColumnWidth(4, 4500) // Total Amount
+            ordersSheet.setColumnWidth(5, 4500) // Amount Paid
+            ordersSheet.setColumnWidth(6, 4500) // Remaining Debt
+            ordersSheet.setColumnWidth(7, 4500) // Gross Profit
+
+            // Sheet 2: Order Items
+            val itemsSheet = workbook.createSheet("Order Items")
+            val itemsHeader = itemsSheet.createRow(0)
+            listOf("Order ID", "Product Name", "Quantity", "Unit Price ($)", "Unit Cost ($)", "Subtotal ($)", "Profit ($)").forEachIndexed { i, title ->
+                itemsHeader.createCell(i).setCellValue(title)
+            }
+
+            var itemRowIdx = 1
+            for (sale in sales) {
+                val items = saleDao.getItemsForSale(sale.id)
+                for (item in items) {
+                    val row = itemsSheet.createRow(itemRowIdx++)
+                    row.createCell(0).setCellValue(sale.id.toDouble())
+                    row.createCell(1).setCellValue(item.productName)
+                    row.createCell(2).setCellValue(item.quantity.toDouble())
+                    row.createCell(3).setCellValue(item.unitPrice)
+                    row.createCell(4).setCellValue(item.unitCost)
+                    row.createCell(5).setCellValue(item.subtotal)
+                    row.createCell(6).setCellValue(item.profit)
+                }
+            }
+
+            itemsSheet.setColumnWidth(0, 3000) // Order ID
+            itemsSheet.setColumnWidth(1, 8000) // Product Name
+            itemsSheet.setColumnWidth(2, 3000) // Quantity
+            itemsSheet.setColumnWidth(3, 4000) // Unit Price
+            itemsSheet.setColumnWidth(4, 4000) // Unit Cost
+            itemsSheet.setColumnWidth(5, 4000) // Subtotal
+            itemsSheet.setColumnWidth(6, 4000) // Profit
 
             pendingWorkbook = workbook
             excelSaver.launch("Sales_${today()}.xlsx")
@@ -378,7 +393,7 @@ class ReportsFragment : Fragment() {
             sheet.setColumnWidth(4, 5000) // Status
 
             pendingWorkbook = workbook
-            excelSaver.launch("Sales_${today()}.xlsx")
+            excelSaver.launch("Stock_${today()}.xlsx")
             Toast.makeText(requireContext(), "Stock Excel exported", Toast.LENGTH_SHORT).show()
 
         } catch (e: Exception) {
@@ -393,28 +408,31 @@ class ReportsFragment : Fragment() {
             val sheet     = workbook.createSheet("Customers")
 
             val headerRow = sheet.createRow(0)
-            listOf("Name", "Phone", "Total Sales", "Total Profit").forEachIndexed { i, title ->
+            listOf("Name", "Phone", "Total Sales", "Total Profit ($)", "Outstanding Debt ($)").forEachIndexed { i, title ->
                 headerRow.createCell(i).setCellValue(title)
             }
 
             customers.forEachIndexed { index, customer ->
-                val row          = sheet.createRow(index + 1)
+                val row           = sheet.createRow(index + 1)
                 val customerSales = saleDao.getByCustomer(customer.id)
-                val totalProfit  = customerSales.sumOf { it.profit }
+                val totalProfit   = customerSales.sumOf { it.profit }
+                val debt          = customerDao.getCustomerDebt(customer.id)
 
                 row.createCell(0).setCellValue(customer.name)
                 row.createCell(1).setCellValue(customer.phone.ifEmpty { "—" })
                 row.createCell(2).setCellValue(customerSales.size.toDouble())
                 row.createCell(3).setCellValue(totalProfit)
+                row.createCell(4).setCellValue(debt)
             }
 
             sheet.setColumnWidth(0, 7000) // Name
             sheet.setColumnWidth(1, 5000) // Phone
-            sheet.setColumnWidth(2, 4000) // Total Sales
-            sheet.setColumnWidth(3, 4000) // Total Profit
+            sheet.setColumnWidth(2, 3500) // Total Sales
+            sheet.setColumnWidth(3, 4500) // Total Profit
+            sheet.setColumnWidth(4, 4500) // Outstanding Debt
 
             pendingWorkbook = workbook
-            excelSaver.launch("Sales_${today()}.xlsx")
+            excelSaver.launch("Customers_${today()}.xlsx")
             Toast.makeText(requireContext(), "Customers Excel exported", Toast.LENGTH_SHORT).show()
 
         } catch (e: Exception) {
@@ -458,25 +476,6 @@ class ReportsFragment : Fragment() {
     }
 
     private fun boldFont() = Font(Font.FontFamily.HELVETICA, 11f, Font.BOLD)
-
-    private fun getOutputFile(fileName: String): File {
-        val dir = requireContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-            ?: requireContext().filesDir
-        return File(dir, fileName)
-    }
-
-    private fun shareFile(file: File, mimeType: String) {
-        val uri = FileProvider.getUriForFile(
-            requireContext(),
-            "${requireContext().packageName}.provider",
-            file
-        )
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, mimeType)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        startActivity(Intent.createChooser(intent, "Open with"))
-    }
 
     private fun today(): String {
         return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())

@@ -55,6 +55,15 @@
 
         </LinearLayout>
 
+        <!-- Debt / balance status -->
+        <TextView
+            android:id="@+id/tvCustomerDebt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="10dp"/>
+
         <!-- Arrow icon -->
         <ImageView
             android:layout_width="20dp"

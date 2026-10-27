@@ -45,4 +45,9 @@
         android:name="com.example.stockmaneger.ui.account.CapitalFragment"
         android:label="Capitals" />
 
+    <fragment
+        android:id="@+id/cartFragment"
+        android:name="com.example.stockmaneger.ui.sales.CartFragment"
+        android:label="New Sale" />
+
 </navigation>
