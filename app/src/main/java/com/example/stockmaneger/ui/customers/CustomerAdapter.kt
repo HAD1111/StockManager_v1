@@ -28,8 +28,8 @@ class CustomerAdapter(
         with(holder.binding) {
             tvCustomerName.text  = customer.name
             tvCustomerPhone.text = customer.phone.ifEmpty { "No phone" }
-            // First letter as avatar
-            tvAvatar.text = customer.name.first().uppercaseChar().toString()
+            // First non-whitespace letter as avatar, safe fallback for blank names
+            tvAvatar.text = getAvatarInitial(customer.name)
 
             root.setOnClickListener     { onClick(customer) }
             root.setOnLongClickListener { onLongClick(customer); true }
@@ -43,5 +43,15 @@ class CustomerAdapter(
         customers.clear()
         customers.addAll(newList)
         notifyDataSetChanged()
+    }
+
+    companion object {
+        /**
+         * Returns the first non-whitespace character in uppercase,
+         * or "?" if the name is empty or contains only whitespace.
+         */
+        fun getAvatarInitial(name: String): String {
+            return name.firstOrNull { !it.isWhitespace() }?.uppercaseChar()?.toString() ?: "?"
+        }
     }
 }

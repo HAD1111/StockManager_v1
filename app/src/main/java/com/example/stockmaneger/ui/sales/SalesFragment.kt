@@ -121,6 +121,16 @@ class SalesFragment : Fragment() {
     }
 
     private fun showAddSaleDialog() {
+        val products = productDao.getAll()
+        if (products.isEmpty()) {
+            Toast.makeText(
+                requireContext(),
+                "No products in stock. Please add a product first.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
         val layout = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(50, 20, 50, 0)
@@ -139,7 +149,6 @@ class SalesFragment : Fragment() {
             inputType   = InputType.TYPE_CLASS_NUMBER
         }
         // Product spinner
-        val products     = productDao.getAll()
         currentProducts = products
         val productNames = products.map { "${it.name} (${it.quantity} left)" }.toTypedArray()
         val tvProductLabel = TextView(requireContext()).apply {
@@ -174,7 +183,9 @@ class SalesFragment : Fragment() {
         // Auto fill price when product selected
         spinnerProduct.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, v: View?, pos: Int, id: Long) {
-                etUnitPrice.setText(products[pos].salePrice.toString())
+                if (pos in products.indices) {
+                    etUnitPrice.setText(products[pos].salePrice.toString())
+                }
             }
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
@@ -222,10 +233,20 @@ class SalesFragment : Fragment() {
             .setPositiveButton("Save") { _, _ ->
                 val customerName  = etCustomer.text.toString().trim()
                 val customerPhoneNumber = etPhoneNumber.text.toString()
-                val selectedProduct = products[spinnerProduct.selectedItemPosition]
+                val productPosition = spinnerProduct.selectedItemPosition
+                if (productPosition !in products.indices) {
+                    Toast.makeText(requireContext(), "Please select a valid product", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                val selectedProduct = products[productPosition]
                 val qty           = etQty.text.toString().toIntOrNull() ?: 0
                 val unitPrice     = etUnitPrice.text.toString().toDoubleOrNull() ?: selectedProduct.salePrice
-                val paymentMethod = paymentMethods[spinnerPayment.selectedItemPosition]
+                val paymentPosition = spinnerPayment.selectedItemPosition
+                val paymentMethod = if (paymentPosition in paymentMethods.indices) {
+                    paymentMethods[paymentPosition]
+                } else {
+                    "Cash"
+                }
 
                 if (customerName.isEmpty() || qty <= 0) {
                     Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show()
