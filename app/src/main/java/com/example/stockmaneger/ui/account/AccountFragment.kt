@@ -64,6 +64,9 @@ class AccountFragment : Fragment() {
         binding.tvViewAllExpenses.setOnClickListener {
             findNavController().navigate(R.id.expensesFragment)
         }
+        binding.cardReports.setOnClickListener {
+            findNavController().navigate(R.id.reportsFragment)
+        }
         binding.btnEditBusinessName.setOnClickListener {
             showEditBusinessNameDialog()
         }
@@ -158,11 +161,11 @@ class AccountFragment : Fragment() {
         }
 
         val icons = mapOf(
-            "Rent"           to "🏠",
-            "Electricity"    to "⚡",
-            "Salary"         to "👤",
-            "Transportation" to "🚚",
-            "Other"          to "💸"
+            "Rent"           to "ðŸ ",
+            "Electricity"    to "âš¡",
+            "Salary"         to "ðŸ‘¤",
+            "Transportation" to "ðŸšš",
+            "Other"          to "ðŸ’¸"
         )
 
         expenses.forEachIndexed { index, expense ->
@@ -175,7 +178,7 @@ class AccountFragment : Fragment() {
             }
 
             val tvIcon = TextView(requireContext()).apply {
-                text = icons[expense.type] ?: "💸"
+                text = icons[expense.type] ?: "ðŸ’¸"
                 textSize = 20f
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -218,7 +221,7 @@ class AccountFragment : Fragment() {
         }
     }
 
-    // ── Dialogs ──────────────────────────────────────────────────
+    // â”€â”€ Dialogs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private fun showAddCapitalDialog() {
         val layout = LinearLayout(requireContext()).apply {
@@ -253,12 +256,12 @@ class AccountFragment : Fragment() {
         var selectedDate = dateFormat.format(calendar.time)
 
         val btnDate = Button(requireContext()).apply {
-            text = "📅 Date: $selectedDate"
+            text = "ðŸ“… Date: $selectedDate"
             setOnClickListener {
                 DatePickerDialog(requireContext(), { _, y, m, d ->
                     calendar.set(y, m, d)
                     selectedDate = dateFormat.format(calendar.time)
-                    text = "📅 Date: $selectedDate"
+                    text = "ðŸ“… Date: $selectedDate"
                 }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
             }
         }
@@ -335,12 +338,12 @@ class AccountFragment : Fragment() {
         var selectedDate = dateFormat.format(calendar.time)
 
         val btnDate = Button(requireContext()).apply {
-            text = "📅 Date: $selectedDate"
+            text = "ðŸ“… Date: $selectedDate"
             setOnClickListener {
                 DatePickerDialog(requireContext(), { _, y, m, d ->
                     calendar.set(y, m, d)
                     selectedDate = dateFormat.format(calendar.time)
-                    text = "📅 Date: $selectedDate"
+                    text = "ðŸ“… Date: $selectedDate"
                 }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
             }
         }
@@ -382,7 +385,7 @@ class AccountFragment : Fragment() {
             .show()
     }
 
-    // ── Helpers ──────────────────────────────────────────────────
+    // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private fun emptyRow(message: String): TextView {
         return TextView(requireContext()).apply {

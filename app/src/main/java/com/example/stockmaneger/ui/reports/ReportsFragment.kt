@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.example.stockmaneger.data.dao.AccountDao
 import com.example.stockmaneger.data.dao.CustomerDao
 import com.example.stockmaneger.data.dao.ExpenseDao
@@ -136,6 +137,8 @@ class ReportsFragment : Fragment() {
         accountDao  = AccountDao(requireContext())
 
         BUSINESS_NAME = accountDao.getBusinessName()
+
+        binding.btnBack.setOnClickListener { findNavController().navigateUp() }
 
         binding.btnSalesPdf.setOnClickListener     { exportSalesPdf() }
         binding.btnCustomersPdf.setOnClickListener { exportCustomersPdf() }

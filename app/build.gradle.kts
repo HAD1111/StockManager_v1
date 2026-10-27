@@ -64,4 +64,6 @@ dependencies {
     implementation(libs.play.services.analytics.impl)
 
     debugImplementation ("androidx.compose.ui:ui-tooling:1.5.1")
+
+    testImplementation(libs.junit)
 }

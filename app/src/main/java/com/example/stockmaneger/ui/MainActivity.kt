@@ -1,23 +1,20 @@
 package com.example.stockmaneger
 
 import android.os.Bundle
-import android.widget.TextView
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.NavigationUI
-import com.example.stockmaneger.data.dao.AccountDao
+import androidx.navigation.ui.setupWithNavController
 import com.example.stockmaneger.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
-    private lateinit var accountDao: AccountDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        accountDao = AccountDao(this)
         // Connect to activity_main.xml
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -26,26 +23,24 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.navHostFragment) as NavHostFragment
         navController = navHostFragment.navController
-        val headerView = binding.navigationView.getHeaderView(0)
-        val tvBusinessName = headerView.findViewById<TextView>(R.id.businessName)
-        tvBusinessName.text=accountDao.getBusinessName()
 
-        // Connect sidebar navigation to NavController
-        NavigationUI.setupWithNavController(binding.navigationView, navController)
+        // Connect BottomNavigationView to NavController
+        binding.bottomNavigation.setupWithNavController(navController)
 
-        // Open/close sidebar when nav items are tapped
-        binding.navigationView.setNavigationItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_dashboard  -> navController.navigate(R.id.dashboardFragment)
-                R.id.nav_sales      -> navController.navigate(R.id.salesFragment)
-                R.id.nav_customers  -> navController.navigate(R.id.customersFragment)
-                R.id.nav_stock      -> navController.navigate(R.id.stockFragment)
-                R.id.nav_account    -> navController.navigate(R.id.accountFragment)
-                R.id.nav_reports    -> navController.navigate(R.id.reportsFragment)
+        // Hide bottom navigation on secondary screens (Reports, Capitals, Expenses)
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.dashboardFragment,
+                R.id.salesFragment,
+                R.id.stockFragment,
+                R.id.customersFragment,
+                R.id.accountFragment -> {
+                    binding.bottomNavigation.visibility = View.VISIBLE
+                }
+                else -> {
+                    binding.bottomNavigation.visibility = View.GONE
+                }
             }
-            binding.drawerLayout.closeDrawers()
-            true
         }
-
     }
 }

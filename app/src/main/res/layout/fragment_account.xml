@@ -12,11 +12,14 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
+
+        <!-- ── BUSINESS NAME HEADER ── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            >
+            android:gravity="center"
+            android:layout_marginBottom="10dp">
 
             <TextView
                 android:id="@+id/tvBusinessName"
@@ -26,12 +29,12 @@
                 android:text="Business Name"
                 android:textSize="18sp"
                 android:gravity="center"
-                android:layout_marginBottom="10dp"
+                android:textStyle="bold"
                 android:textColor="@color/primary_dark"/>
 
         </LinearLayout>
 
-        <!-- ── BALANCE CARD ── -->
+        <!-- ── SECTION A: FINANCIAL OVERVIEW (BALANCE CARD) ── -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -65,7 +68,7 @@
                     android:layout_marginTop="4dp"
                     android:layout_marginBottom="20dp"/>
 
-                <!-- Profit row -->
+                <!-- Profit & Expenses row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -127,12 +130,12 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ── ACTION BUTTONS ── -->
+        <!-- ── SECTION B: FINANCIAL ACTIVITY ACTIONS ── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="1dp">
+            android:layout_marginBottom="8dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAddMoney"
@@ -155,19 +158,88 @@
                 app:backgroundTint="@color/danger"/>
 
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="16dp">
 
             <Button
                 android:id="@+id/btnEditBusinessName"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Edit Business Name" />
+                android:text="Edit Business Name"
+                android:textColor="@color/primary" />
         </LinearLayout>
+
+        <!-- ── SECTION C: REPORTS & EXPORTS ENTRY ── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardReports"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/border"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="@color/surface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📊"
+                    android:textSize="26sp"
+                    android:layout_marginEnd="16dp"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Reports &amp; Exports"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Generate PDF and Excel reports for Sales, Stock, and Customers"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textSize="24sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginStart="8dp"/>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- ── CAPITAL HISTORY ── -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -184,6 +256,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"/>
+
             <TextView
                 android:id="@+id/tvViewAllCapitals"
                 android:layout_width="wrap_content"
@@ -192,7 +265,6 @@
                 android:textSize="13sp"
                 android:textColor="@color/primary"
                 android:padding="4dp"/>
-
 
         </LinearLayout>
 

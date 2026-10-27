@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.stockmaneger.R
 import com.example.stockmaneger.data.dao.AccountDao
@@ -52,6 +53,7 @@ class CapitalFragment : Fragment() {
 
         loadCapitals()
 
+        binding.btnBack.setOnClickListener { findNavController().navigateUp() }
         binding.fabAddCapital.setOnClickListener { showAddCapitalDialog() }
     }
 

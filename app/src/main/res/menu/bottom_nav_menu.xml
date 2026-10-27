@@ -1,4 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <item
+        android:id="@+id/dashboardFragment"
+        android:title="Home"
+        android:icon="@drawable/ic_nav_home" />
+
+    <item
+        android:id="@+id/salesFragment"
+        android:title="Sales"
+        android:icon="@drawable/ic_nav_sales" />
+
+    <item
+        android:id="@+id/stockFragment"
+        android:title="Stock"
+        android:icon="@drawable/ic_nav_stock" />
+
+    <item
+        android:id="@+id/customersFragment"
+        android:title="Customers"
+        android:icon="@drawable/ic_nav_customers" />
+
+    <item
+        android:id="@+id/accountFragment"
+        android:title="Account"
+        android:icon="@drawable/ic_nav_account" />
+
 </menu>
