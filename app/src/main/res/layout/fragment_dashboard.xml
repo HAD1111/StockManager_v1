@@ -2,8 +2,10 @@
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scrollDashboard"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     android:background="@color/background">
 
     <LinearLayout
@@ -12,7 +14,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- ── HEADER ───────────────────────────── -->
+        <!-- ── 1. HEADER SECTION ───────────────────────────── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -32,67 +34,135 @@
                     android:layout_height="wrap_content"
                     android:text="Good morning"
                     android:textSize="13sp"
-                    android:textColor="@color/text_secondary"/>
+                    android:fontFamily="@font/dm_sans"
+                    android:textColor="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvBusinessName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="My Business"
-                    android:textSize="20sp"
+                    android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="@color/text_primary"/>
+                    android:fontFamily="@font/dm_sans"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/tvCurrentDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/dm_sans"
+                    android:textColor="@color/text_secondary" />
 
             </LinearLayout>
 
-            <!-- Balance pill -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_badge_primary"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="8dp"
-                android:gravity="center">
+            <!-- Store avatar badge -->
+            <FrameLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_avatar">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="BALANCE"
-                    android:textSize="9sp"
-                    android:textColor="@color/primary"
-                    android:letterSpacing="0.1"/>
-
-                <TextView
-                    android:id="@+id/tvBalance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="$0.00"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/primary"/>
-
-            </LinearLayout>
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_nav_home"
+                    app:tint="@color/primary" />
+            </FrameLayout>
 
         </LinearLayout>
 
-        <!-- ── METRIC CARDS ROW 1 ────────────────── -->
+        <!-- ── 2. QUICK ACTIONS ────────────────────────────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="18dp">
+
+            <!-- Add Sale (Primary action) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnQuickAddSale"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1.2"
+                android:layout_marginEnd="6dp"
+                android:text="New Sale"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/surface"
+                app:backgroundTint="@color/primary"
+                app:cornerRadius="10dp"
+                app:icon="@drawable/ic_add"
+                app:iconTint="@color/surface"
+                app:iconSize="16dp" />
+
+            <!-- Add Product -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnQuickAddProduct"
+                style="@style/Widget.StockManager.Button.Outlined"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="Stock"
+                android:textSize="12sp"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/text_primary"
+                app:strokeColor="@color/border"
+                app:cornerRadius="10dp"
+                app:icon="@drawable/ic_nav_stock"
+                app:iconTint="@color/primary"
+                app:iconSize="15dp" />
+
+            <!-- Add Expense -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnQuickAddExpense"
+                style="@style/Widget.StockManager.Button.Outlined"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:text="Expense"
+                android:textSize="12sp"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/text_primary"
+                app:strokeColor="@color/border"
+                app:cornerRadius="10dp"
+                app:icon="@drawable/ic_add"
+                app:iconTint="@color/primary"
+                app:iconSize="15dp" />
+
+        </LinearLayout>
+
+        <!-- ── 3. FINANCIAL OVERVIEW ───────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FINANCIAL OVERVIEW"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08"
+            android:fontFamily="@font/dm_sans"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Row 1: Revenue & Recognized Profit -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginBottom="10dp">
 
-            <!-- Revenue card -->
+            <!-- Revenue Card -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardRevenue"
+                style="@style/Widget.StockManager.Card"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="5dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/border"
-                app:strokeWidth="1dp">
+                android:layout_marginEnd="5dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -100,44 +170,61 @@
                     android:orientation="vertical"
                     android:padding="14dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="💰"
-                        android:textSize="20sp"
-                        android:layout_marginBottom="8dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="REVENUE"
-                        android:textSize="10sp"
-                        android:textColor="@color/text_secondary"
-                        android:letterSpacing="0.08"/>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="REVENUE"
+                            android:textSize="10sp"
+                            android:letterSpacing="0.08"
+                            android:fontFamily="@font/dm_sans"
+                            android:textColor="@color/text_secondary" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_revenue"
+                            app:tint="@color/primary" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvRevenue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="$0.00"
-                        android:textSize="20sp"
+                        android:textSize="19sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary"/>
+                        android:fontFamily="@font/dm_sans"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Recognized sales"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/dm_sans"
+                        android:textColor="@color/text_secondary" />
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Profit card -->
+            <!-- Recognized Profit Card -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardProfit"
+                style="@style/Widget.StockManager.Card"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="5dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/border"
-                app:strokeWidth="1dp">
+                android:layout_marginStart="5dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -145,29 +232,48 @@
                     android:orientation="vertical"
                     android:padding="14dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="📈"
-                        android:textSize="20sp"
-                        android:layout_marginBottom="8dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="PROFIT"
-                        android:textSize="10sp"
-                        android:textColor="@color/text_secondary"
-                        android:letterSpacing="0.08"/>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="PROFIT"
+                            android:textSize="10sp"
+                            android:letterSpacing="0.08"
+                            android:fontFamily="@font/dm_sans"
+                            android:textColor="@color/text_secondary" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_profit"
+                            app:tint="@color/accent" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvProfit"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="$0.00"
-                        android:textSize="20sp"
+                        android:textSize="19sp"
                         android:textStyle="bold"
-                        android:textColor="@color/success"/>
+                        android:fontFamily="@font/dm_sans"
+                        android:textColor="@color/accent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="After costs covered"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/dm_sans"
+                        android:textColor="@color/text_secondary" />
 
                 </LinearLayout>
 
@@ -175,23 +281,21 @@
 
         </LinearLayout>
 
-        <!-- ── METRIC CARDS ROW 2 ────────────────── -->
+        <!-- Row 2: Cash Balance & Outstanding Debt -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="18dp">
 
-            <!-- Stock card -->
+            <!-- Cash Balance Card -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardBalance"
+                style="@style/Widget.StockManager.Card"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="5dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/border"
-                app:strokeWidth="1dp">
+                android:layout_marginEnd="5dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -199,52 +303,61 @@
                     android:orientation="vertical"
                     android:padding="14dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="📦"
-                        android:textSize="20sp"
-                        android:layout_marginBottom="8dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="CASH BALANCE"
+                            android:textSize="10sp"
+                            android:letterSpacing="0.08"
+                            android:fontFamily="@font/dm_sans"
+                            android:textColor="@color/text_secondary" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_wallet"
+                            app:tint="@color/primary" />
+                    </LinearLayout>
 
                     <TextView
+                        android:id="@+id/tvBalance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="PRODUCTS"
-                        android:textSize="10sp"
-                        android:textColor="@color/text_secondary"
-                        android:letterSpacing="0.08"/>
-
-                    <TextView
-                        android:id="@+id/tvProductCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textSize="20sp"
+                        android:text="$0.00"
+                        android:textSize="19sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary"/>
+                        android:fontFamily="@font/dm_sans"
+                        android:textColor="@color/primary" />
 
                     <TextView
-                        android:id="@+id/tvLowStock"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=""
+                        android:layout_marginTop="2dp"
+                        android:text="In cash register"
                         android:textSize="11sp"
-                        android:textColor="@color/danger"/>
+                        android:fontFamily="@font/dm_sans"
+                        android:textColor="@color/text_secondary" />
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Expenses card -->
+            <!-- Outstanding Debt Card -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardDebt"
+                style="@style/Widget.StockManager.Card"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="5dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/border"
-                app:strokeWidth="1dp">
+                android:layout_marginStart="5dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -252,29 +365,49 @@
                     android:orientation="vertical"
                     android:padding="14dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="🧾"
-                        android:textSize="20sp"
-                        android:layout_marginBottom="8dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="OUTSTANDING DEBT"
+                            android:textSize="10sp"
+                            android:letterSpacing="0.08"
+                            android:fontFamily="@font/dm_sans"
+                            android:textColor="@color/text_secondary" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_debt"
+                            app:tint="@color/danger" />
+                    </LinearLayout>
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="EXPENSES"
-                        android:textSize="10sp"
-                        android:textColor="@color/text_secondary"
-                        android:letterSpacing="0.08"/>
-
-                    <TextView
-                        android:id="@+id/tvExpenses"
+                        android:id="@+id/tvDebt"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="$0.00"
-                        android:textSize="20sp"
+                        android:textSize="19sp"
                         android:textStyle="bold"
-                        android:textColor="@color/danger"/>
+                        android:fontFamily="@font/dm_sans"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvDebtCaption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Unpaid by customers"
+                        android:textSize="11sp"
+                        android:fontFamily="@font/dm_sans"
+                        android:textColor="@color/text_secondary" />
 
                 </LinearLayout>
 
@@ -282,7 +415,140 @@
 
         </LinearLayout>
 
-        <!-- ── RECENT SALES ───────────────────────── -->
+        <!-- Hidden backward-compatibility fields for legacy bindings -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone">
+            <TextView android:id="@+id/tvProductCount" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <TextView android:id="@+id/tvLowStock" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <TextView android:id="@+id/tvExpenses" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- ── 4. SALES PERFORMANCE CHART ────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.StockManager.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="18dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Chart Title & Period Revenue -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Sales Performance"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/dm_sans"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvChartPeriodRevenue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="$0.00"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/dm_sans"
+                        android:textColor="@color/accent" />
+
+                </LinearLayout>
+
+                <!-- Time Filter Tabs: Today / This Week / This Month / This Year -->
+                <LinearLayout
+                    android:id="@+id/layoutChartTabs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="14dp">
+
+                    <TextView
+                        android:id="@+id/tabToday"
+                        android:layout_width="0dp"
+                        android:layout_height="32dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:gravity="center"
+                        android:text="Today"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/dm_sans"
+                        android:background="@drawable/bg_tab_unselected"
+                        android:textColor="@color/text_secondary"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/tabWeek"
+                        android:layout_width="0dp"
+                        android:layout_height="32dp"
+                        android:layout_weight="1.1"
+                        android:layout_marginEnd="4dp"
+                        android:gravity="center"
+                        android:text="This Week"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/dm_sans"
+                        android:background="@drawable/bg_tab_selected"
+                        android:textColor="@color/surface"
+                        android:textStyle="bold"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/tabMonth"
+                        android:layout_width="0dp"
+                        android:layout_height="32dp"
+                        android:layout_weight="1.1"
+                        android:layout_marginEnd="4dp"
+                        android:gravity="center"
+                        android:text="This Month"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/dm_sans"
+                        android:background="@drawable/bg_tab_unselected"
+                        android:textColor="@color/text_secondary"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/tabYear"
+                        android:layout_width="0dp"
+                        android:layout_height="32dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="This Year"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/dm_sans"
+                        android:background="@drawable/bg_tab_unselected"
+                        android:textColor="@color/text_secondary"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                </LinearLayout>
+
+                <!-- Custom Performance Chart -->
+                <com.example.stockmaneger.ui.dashboard.SalesPerformanceChartView
+                    android:id="@+id/salesChartView"
+                    android:layout_width="match_parent"
+                    android:layout_height="175dp" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── 5. RECENT SALES ────────────────────────────── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -295,49 +561,53 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Recent Sales"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary"/>
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/text_primary" />
 
             <TextView
                 android:id="@+id/tvViewAllSales"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:padding="4dp"
                 android:text="View all"
                 android:textSize="13sp"
-                android:textColor="@color/primary"/>
+                android:textStyle="bold"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/primary"
+                android:clickable="true"
+                android:focusable="true" />
 
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.StockManager.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp"
-            app:strokeColor="@color/border"
-            app:strokeWidth="1dp">
+            android:layout_marginBottom="18dp">
 
             <LinearLayout
                 android:id="@+id/llRecentSales"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"/>
+                android:orientation="vertical" />
 
             <TextView
                 android:id="@+id/tvNoSales"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="20dp"
+                android:padding="28dp"
                 android:gravity="center"
                 android:text="No sales recorded yet"
+                android:fontFamily="@font/dm_sans"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ── LOW STOCK ALERTS ───────────────────── -->
+        <!-- ── 6. LOW STOCK ALERTS ────────────────────────── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -349,50 +619,69 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Low Stock Alerts"
-                android:textSize="15sp"
+                android:text="Stock Alerts"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary"/>
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/text_primary" />
 
             <TextView
                 android:id="@+id/tvViewAllStock"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:padding="4dp"
                 android:text="View all"
                 android:textSize="13sp"
-                android:textColor="@color/primary"/>
+                android:textStyle="bold"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/primary"
+                android:clickable="true"
+                android:focusable="true" />
 
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.StockManager.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp"
-            app:strokeColor="@color/border"
-            app:strokeWidth="1dp">
+            android:layout_marginBottom="18dp">
 
             <LinearLayout
                 android:id="@+id/llLowStock"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"/>
+                android:orientation="vertical" />
 
-            <TextView
+            <LinearLayout
                 android:id="@+id/tvNoLowStock"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="20dp"
+                android:orientation="horizontal"
                 android:gravity="center"
-                android:text="All products are well stocked ✓"
-                android:textColor="@color/success"
-                android:textSize="13sp"
-                android:visibility="gone"/>
+                android:padding="24dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_check_circle"
+                    app:tint="@color/success" />
+
+                <TextView
+                    android:id="@+id/tvNoLowStockText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="All stock levels look good"
+                    android:fontFamily="@font/dm_sans"
+                    android:textColor="@color/success"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ── RECENT EXPENSES ── -->
+        <!-- ── 7. RECENT EXPENSES ─────────────────────────── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -407,33 +696,35 @@
                 android:text="Recent Expenses"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary"/>
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/text_primary" />
 
             <TextView
                 android:id="@+id/tvViewAllExpenses"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:padding="4dp"
                 android:text="View all"
                 android:textSize="13sp"
-                android:textColor="@color/primary"/>
+                android:textStyle="bold"
+                android:fontFamily="@font/dm_sans"
+                android:textColor="@color/primary"
+                android:clickable="true"
+                android:focusable="true" />
 
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.StockManager.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp"
-            app:strokeColor="@color/border"
-            app:strokeWidth="1dp"
-            app:cardBackgroundColor="@color/surface">
+            android:layout_marginBottom="24dp">
 
             <LinearLayout
                 android:id="@+id/layoutRecentExpenses"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"/>
+                android:orientation="vertical" />
 
         </com.google.android.material.card.MaterialCardView>
 

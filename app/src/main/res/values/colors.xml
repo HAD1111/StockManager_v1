@@ -1,33 +1,41 @@
-<!-- res/values/colors.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- ===== PRIMARY BRAND COLOR — change this to retheme the whole app ===== -->
-    <color name="primary">#1A56DB</color>
-    <color name="primary_dark">#1042A8</color>
-    <color name="primary_light">#EBF5FF</color>
-
-    <!-- ===== ACCENT ===== -->
-    <color name="accent">#16BDCA</color>
-    <color name="accent_light">#E0F7F8</color>
-
-    <!-- ===== SEMANTIC ===== -->
-    <color name="success">#057A55</color>
-    <color name="success_bg">#DEF7EC</color>
-    <color name="warning">#C27803</color>
-    <color name="warning_bg">#FDF6B2</color>
-    <color name="danger">#C81E1E</color>
-    <color name="danger_bg">#FDE8E8</color>
-
-    <!-- ===== NEUTRALS ===== -->
-    <color name="text_primary">#111827</color>
-    <color name="text_secondary">#6B7280</color>
-    <color name="background">#F9FAFB</color>
+    <!-- ===== FOUNDATIONS ===== -->
+    <color name="background">#F5F7FA</color>
     <color name="surface">#FFFFFF</color>
-    <color name="border">#0F172A</color>
+    <color name="surface_secondary">#EDF1F5</color>
+    <color name="surface_elevated">#FFFFFF</color>
+    <color name="text_primary">#172B4D</color>
+    <color name="text_secondary">#637083</color>
+    <color name="text_disabled">#9AA5B3</color>
+    <color name="border">#DCE3EB</color>
+    <color name="divider">#DCE3EB</color>
+    <color name="search_border">#DCE3EB</color>
 
-    <!-- ===== SIDEBAR ===== -->
-    <color name="sidebar_bg">#0F172A</color>
-    <color name="sidebar_text">#94A3B8</color>
-    <color name="search_border">#0F172A</color>
+    <!-- ===== BRAND & INTERACTION ===== -->
+    <color name="primary">#17365D</color>
+    <color name="primary_dark">#102947</color>
+    <color name="primary_light">#EDF1F5</color>
+    <color name="accent">#148A83</color>
+    <color name="accent_light">#E4F4F1</color>
+    <color name="input_outline_focused">#148A83</color>
+    <color name="input_outline_default">#DCE3EB</color>
+
+    <!-- ===== FINANCIAL & VALIDATION STATES ===== -->
+    <color name="success">#21865B</color>
+    <color name="success_bg">#E7F5EC</color>
+    <color name="success_border">#C8E6D3</color>
+    <color name="warning">#A96B08</color>
+    <color name="warning_bg">#FFF3D9</color>
+    <color name="warning_border">#FCE3AA</color>
+    <color name="danger">#C63F48</color>
+    <color name="danger_bg">#FCEAEC</color>
+    <color name="danger_border">#F5C2C7</color>
+    <color name="disabled">#9AA5B3</color>
+
+    <!-- ===== LEGACY / COMPATIBILITY ALIASES ===== -->
+    <color name="sidebar_bg">#17365D</color>
+    <color name="sidebar_text">#637083</color>
 
 </resources>
